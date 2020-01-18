@@ -116,7 +116,6 @@ public class DemoTopicMessageCodec {
         eventMessage.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
 
         eventMessage.setData(new HashMap<>(json));
-        eventMessage.setSuccess(true);
         return eventMessage;
     }
 
@@ -128,7 +127,6 @@ public class DemoTopicMessageCodec {
         eventMessage.setEvent("fault_alarm");
         eventMessage.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
         eventMessage.setData(new HashMap<>(json));
-        eventMessage.setSuccess(true);
         return eventMessage;
     }
 
