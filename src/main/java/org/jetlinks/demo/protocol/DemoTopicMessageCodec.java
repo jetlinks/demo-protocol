@@ -61,7 +61,6 @@ public class DemoTopicMessageCodec {
         reply.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
         reply.setDeviceId(json.getString("deviceId"));
         reply.setTimestamp(json.getLong("timestamp"));
-        reply.setSuccess(json.getBoolean("success"));
         return reply;
     }
 
