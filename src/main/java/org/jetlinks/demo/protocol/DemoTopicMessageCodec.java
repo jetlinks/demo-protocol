@@ -1,27 +1,25 @@
 package org.jetlinks.demo.protocol;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import io.netty.buffer.Unpooled;
 import lombok.extern.slf4j.Slf4j;
 import org.hswebframework.web.id.IDGenerator;
-import org.jetlinks.core.message.CommonDeviceMessage;
-import org.jetlinks.core.message.DeviceOfflineMessage;
-import org.jetlinks.core.message.DeviceOnlineMessage;
-import org.jetlinks.core.message.Message;
+import org.jetlinks.core.message.*;
+import org.jetlinks.core.message.codec.SimpleMqttMessage;
 import org.jetlinks.core.message.event.EventMessage;
+import org.jetlinks.core.message.function.FunctionInvokeMessage;
 import org.jetlinks.core.message.function.FunctionInvokeMessageReply;
-import org.jetlinks.core.message.property.ReadPropertyMessageReply;
-import org.jetlinks.core.message.property.ReportPropertyMessage;
-import org.jetlinks.core.message.property.WritePropertyMessageReply;
+import org.jetlinks.core.message.property.*;
 
 import java.util.HashMap;
-import java.util.Map;
 
 
 @Slf4j
 public class DemoTopicMessageCodec {
 
-    protected Message doEncode(String topic, JSONObject payload) {
-        Message message = null;
+    protected DeviceMessage doDecode(String deviceId, String topic, JSONObject payload) {
+        DeviceMessage message = null;
         if (topic.startsWith("/fire_alarm")) {
             message = handleFireAlarm(topic, payload);
         } else if (topic.startsWith("/fault_alarm")) {
@@ -32,15 +30,59 @@ public class DemoTopicMessageCodec {
             message = handleDeviceOnlineStatus(topic, payload);
         } else if (topic.startsWith("/read-property")) {
             message = handleReadPropertyReply(payload);
-        } else if (topic.startsWith("/report-property")) { //定时上报属性?
+        } else if (topic.startsWith("/report-property")) { //定时上报属性
             message = handleReportProperty(payload);
         } else if (topic.startsWith("/write-property")) {
             message = handleWritePropertyReply(payload);
         } else if (topic.startsWith("/invoke-function")) {
             message = handleFunctionInvokeReply(payload);
+        } else if (topic.startsWith("/children")) {
+            ChildDeviceMessage childDeviceMessage = new ChildDeviceMessage();
+            childDeviceMessage.setDeviceId(deviceId);
+            DeviceMessage children = doDecode(deviceId, topic.substring(9), payload);
+            childDeviceMessage.setChildDeviceMessage(children);
+            childDeviceMessage.setChildDeviceId(children.getDeviceId());
+            message = childDeviceMessage;
         }
+
         log.info("handle demo message:{}:{}", topic, payload);
         return message;
+    }
+
+
+    protected TopicMessage doEncode(DeviceMessage message) {
+        if (message instanceof ReadPropertyMessage) {
+            String topic = "/read-property";
+            JSONObject data = new JSONObject();
+            data.put("messageId", message.getMessageId());
+            data.put("deviceId", message.getDeviceId());
+            data.put("properties", ((ReadPropertyMessage) message).getProperties());
+            return new TopicMessage(topic, data);
+        } else if (message instanceof WritePropertyMessage) {
+            String topic = "/write-property";
+            JSONObject data = new JSONObject();
+            data.put("messageId", message.getMessageId());
+            data.put("deviceId", message.getDeviceId());
+            data.put("properties", ((WritePropertyMessage) message).getProperties());
+            return new TopicMessage(topic, data);
+        } else if (message instanceof FunctionInvokeMessage) {
+            String topic = "/invoke-function";
+            FunctionInvokeMessage invokeMessage = ((FunctionInvokeMessage) message);
+            JSONObject data = new JSONObject();
+            data.put("messageId", message.getMessageId());
+            data.put("deviceId", message.getDeviceId());
+            data.put("function", invokeMessage.getFunctionId());
+            data.put("args", invokeMessage.getInputs());
+            return new TopicMessage(topic, data);
+        } else if (message instanceof ChildDeviceMessage) {
+            TopicMessage msg = doEncode((DeviceMessage) ((ChildDeviceMessage) message).getChildDeviceMessage());
+            if (msg == null) {
+                return null;
+            }
+            String topic = "/children" + msg.getTopic();
+            return new TopicMessage(topic, msg.getMessage());
+        }
+        return null;
     }
 
     private FunctionInvokeMessageReply handleFunctionInvokeReply(JSONObject json) {
@@ -84,31 +126,7 @@ public class DemoTopicMessageCodec {
         return reply;
     }
 
-    /*
-
-     {
-     "devid": "863703032301165", // 设备编号 "pid": "TBS-110", // 设备型号
-     "pname": "TBS-110", // 设备型号名称 "cid": 34, // 单位 ID
-     "aid": 1, // 区域 ID
-     "a_name": "未来科技城", // 区域名称 "bid": 2, // 建筑 ID
-     "b_name": "C2 栋", // 建筑名称
-     "lid": 5, // 位置 ID
-     "l_name": "4-5-201", // 位置名称
-     "time": "2018-01-04 16:28:50", // 消息时间
-     "alarm_type": 1, // 报警类型
-     "alarm_type_name": "火灾报警", // 报警描述
-     "event_id": 32, // 事件 ID
-     "event_count": 1, // 该事件消息次数
-     "device_type": 1, // 设备的产品类型(1:烟感、2:温感、3:可燃气体、4:手报、5:声光 报、6:网关)
-     "comm_type": 2, // 设备的通信方式(1:LoRaWAN、2:NB-IoT)
-     "first_alarm_time":"2018-01-04 16:28:50",
-     "last_alarm_time":"2018-01-04 16:28:50",
-     "lng":22.22,
-     "lat":23.23
-     }
-     */
     private EventMessage handleFireAlarm(String topic, JSONObject json) {
-        // String[] topics = topic.split("[/]");
         EventMessage eventMessage = new EventMessage();
 
         eventMessage.setDeviceId(json.getString("deviceId"));
@@ -148,7 +166,7 @@ public class DemoTopicMessageCodec {
         } else {
             deviceMessage = new DeviceOfflineMessage();
         }
-        deviceMessage.setDeviceId(json.getString("dno"));
+        deviceMessage.setDeviceId(json.getString("deviceId"));
 
         return deviceMessage;
     }
