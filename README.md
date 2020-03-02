@@ -9,5 +9,4 @@
 类名填写: `org.jetlinks.demo.protocol.DemoProtocolSupportProvider`
 
 
-# 模拟器脚本
 
