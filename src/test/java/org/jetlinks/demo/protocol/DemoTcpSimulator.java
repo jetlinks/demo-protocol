@@ -12,11 +12,14 @@ import org.jetlinks.demo.protocol.tcp.MessageType;
 import org.jetlinks.demo.protocol.tcp.TcpStatus;
 import org.jetlinks.demo.protocol.tcp.message.AuthRequest;
 import org.jetlinks.demo.protocol.tcp.message.AuthResponse;
+import org.jetlinks.demo.protocol.tcp.message.FireAlarm;
 import org.jetlinks.demo.protocol.tcp.message.TemperatureReport;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 
 @Slf4j
 public class DemoTcpSimulator {
@@ -53,18 +56,33 @@ public class DemoTcpSimulator {
                             System.out.println(tcpMessage);
                             //认证通过后定时上报温度数据
                             if (tcpMessage.getType() == MessageType.AUTH_RES && ((AuthResponse) tcpMessage.getData()).getStatus() == TcpStatus.SUCCESS) {
-                                Flux.interval(Duration.ofSeconds(2))
-                                        .map(t -> TemperatureReport.of(deviceId, (float) ThreadLocalRandom.current().nextDouble(20D, 50D)))
-                                        .doOnNext(data -> {
-                                            byte[] bytes = DemoTcpMessage.of(MessageType.REPORT_TEMPERATURE, data).toBytes();
-                                            socket.write(Buffer.buffer(bytes), res -> {
-                                                if (!res.succeeded()) {
-                                                    res.cause().printStackTrace();
-                                                    return;
-                                                }
-                                                log.debug("send message:\n{}\n{}", data, Hex.encodeHexString(bytes));
-                                            });
+                                Flux.interval(Duration.ofSeconds(1))
+                                        .flatMap(t -> Flux.just(
+                                                DemoTcpMessage.of(MessageType.REPORT_TEMPERATURE,
+                                                        TemperatureReport.of(deviceId, (float) ThreadLocalRandom.current().nextDouble(20D, 50D)))
+                                                        .toBytes()
+                                                ,
+                                                DemoTcpMessage.of(MessageType.FIRE_ALARM,
+                                                FireAlarm.builder()
+                                                        .point(ThreadLocalRandom.current().nextInt())
+                                                        .lat(102.234F)
+                                                        .lnt(122.122F)
+                                                        .deviceId(deviceId)
+                                                        .build()).toBytes()
+                                        ))
+                                        .map(data -> {
+//                                            byte[] bytes = DemoTcpMessage.of(MessageType.REPORT_TEMPERATURE, data).toBytes();
+                                            log.debug("send message:\n{}", Hex.encodeHexString(data));
+                                            return Buffer.buffer(data);
                                         })
+                                        .buffer(2)//一次性发送2个包
+                                        .flatMap(list -> Mono.justOrEmpty(list.stream().reduce(Buffer::appendBuffer)))
+                                        .doOnNext(buf -> socket.write(buf, res -> {
+                                            System.out.println(Hex.encodeHexString(buf.getBytes()));
+                                            if (!res.succeeded()) {
+                                                res.cause().printStackTrace();
+                                            }
+                                        }))
                                         .subscribe();
                             }
                         }).write(Buffer.buffer(DemoTcpMessage.of(MessageType.AUTH_REQ, AuthRequest.of(1001, key)).toBytes()), res -> {

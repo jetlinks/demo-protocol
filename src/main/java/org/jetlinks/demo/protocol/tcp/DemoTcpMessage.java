@@ -37,9 +37,12 @@ public class DemoTcpMessage {
     public byte[] toBytes() {
         byte[] header = new byte[5];
         header[0] = (byte) type.ordinal();
+
         byte[] body = type.toBytes(data);
         int bodyLength = body.length;
+
         BytesUtils.toHighBytes(header, bodyLength, 1, 4);
+
         if (bodyLength == 0) {
             return header;
         }

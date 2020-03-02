@@ -15,10 +15,9 @@ public enum MessageType {
     ERROR("错误", ErrorMessage::new),
     PING("Ping", Ping::new), PONG("Pong", Pong::new),
     REPORT_TEMPERATURE("上报温度", TemperatureReport::new),
-//    READ_TEMPERATURE("读取温度"),
+    //    READ_TEMPERATURE("读取温度"),
 //    READ_TEMPERATURE_REPLY("读取温度回复"),
-//    FIRE_ALARM("火警")
-    ;
+    FIRE_ALARM("火警", FireAlarm::new);
     private String text;
 
     private Supplier<TcpPayload> payloadSupplier;

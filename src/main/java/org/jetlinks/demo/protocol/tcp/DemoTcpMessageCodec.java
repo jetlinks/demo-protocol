@@ -38,11 +38,14 @@ public class DemoTcpMessageCodec implements DeviceMessageCodec {
             FromDeviceMessageContext ctx = ((FromDeviceMessageContext) context);
             ByteBuf byteBuf = context.getMessage().getPayload();
             byte[] payload = ByteBufUtil.getBytes(byteBuf, 0, byteBuf.readableBytes(), false);
+            if (log.isDebugEnabled()) {
+                log.debug("handle tcp message:\n{}", Hex.encodeHexString(payload));
+            }
             DemoTcpMessage message;
             try {
                 message = DemoTcpMessage.of(payload);
                 if (log.isDebugEnabled()) {
-                    log.debug("handle tcp message:\n{}\n{}", Hex.encodeHexString(payload), message);
+                    log.debug("decode tcp message:\n{}\n{}", Hex.encodeHexString(payload), message);
                 }
             } catch (Exception e) {
                 log.warn("decode tcp message error:[{}]", Hex.encodeHexString(payload), e);
