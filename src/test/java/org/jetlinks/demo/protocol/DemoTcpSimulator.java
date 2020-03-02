@@ -63,22 +63,18 @@ public class DemoTcpSimulator {
                                                         .toBytes()
                                                 ,
                                                 DemoTcpMessage.of(MessageType.FIRE_ALARM,
-                                                FireAlarm.builder()
-                                                        .point(ThreadLocalRandom.current().nextInt())
-                                                        .lat(102.234F)
-                                                        .lnt(122.122F)
-                                                        .deviceId(deviceId)
-                                                        .build()).toBytes()
+                                                        FireAlarm.builder()
+                                                                .point(ThreadLocalRandom.current().nextInt())
+                                                                .lat(102.234F)
+                                                                .lnt(122.122F)
+                                                                .deviceId(deviceId)
+                                                                .build()).toBytes()
                                         ))
-                                        .map(data -> {
-//                                            byte[] bytes = DemoTcpMessage.of(MessageType.REPORT_TEMPERATURE, data).toBytes();
-                                            log.debug("send message:\n{}", Hex.encodeHexString(data));
-                                            return Buffer.buffer(data);
-                                        })
-                                        .buffer(2)//一次性发送2个包
-                                        .flatMap(list -> Mono.justOrEmpty(list.stream().reduce(Buffer::appendBuffer)))
+                                        .map(Buffer::buffer)
+                                        .window(2)//一次性发送2条数据
+                                        .flatMap(list -> list.reduce(Buffer::appendBuffer))
                                         .doOnNext(buf -> socket.write(buf, res -> {
-                                            System.out.println(Hex.encodeHexString(buf.getBytes()));
+                                            log.debug("send : {}", Hex.encodeHexString(buf.getBytes()));
                                             if (!res.succeeded()) {
                                                 res.cause().printStackTrace();
                                             }
