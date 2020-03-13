@@ -24,7 +24,11 @@ public class DemoTopicMessageCodec {
             message = handleFireAlarm(topic, payload);
         } else if (topic.startsWith("/fault_alarm")) {
             message = handleFaultAlarm(topic, payload);
-        } else if (topic.startsWith("/dev_msg")) {
+        } else if (topic.startsWith("/register")) {
+            message = handleRegister(payload);
+        } else if (topic.startsWith("/unregister")) {
+            message = handleUnRegister(payload);
+        }  else if (topic.startsWith("/dev_msg")) {
             message = handleDeviceMessage(topic, payload);
         } else if (topic.startsWith("/device_online_status")) {
             message = handleDeviceOnlineStatus(topic, payload);
@@ -94,6 +98,22 @@ public class DemoTopicMessageCodec {
         reply.setCode(json.getString("code"));
         reply.setTimestamp(json.getLong("timestamp"));
         reply.setSuccess(json.getBoolean("success"));
+        return reply;
+    }
+
+    private DeviceRegisterMessage handleRegister(JSONObject json) {
+        DeviceRegisterMessage reply = new DeviceRegisterMessage();
+        reply.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
+        reply.setDeviceId(json.getString("deviceId"));
+        reply.setTimestamp(System.currentTimeMillis());
+        return reply;
+    }
+
+    private DeviceUnRegisterMessage handleUnRegister(JSONObject json) {
+        DeviceUnRegisterMessage reply = new DeviceUnRegisterMessage();
+        reply.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
+        reply.setDeviceId(json.getString("deviceId"));
+        reply.setTimestamp(System.currentTimeMillis());
         return reply;
     }
 
