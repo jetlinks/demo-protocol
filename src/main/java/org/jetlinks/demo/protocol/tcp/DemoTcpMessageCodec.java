@@ -10,12 +10,13 @@ import org.jetlinks.core.Value;
 import org.jetlinks.core.device.DeviceRegistry;
 import org.jetlinks.core.message.DeviceMessage;
 import org.jetlinks.core.message.DeviceOnlineMessage;
+import org.jetlinks.core.message.Message;
 import org.jetlinks.core.message.codec.*;
+import org.jetlinks.core.message.property.ReadPropertyMessage;
+import org.jetlinks.core.message.property.ReportPropertyMessage;
+import org.jetlinks.core.message.property.WritePropertyMessage;
 import org.jetlinks.core.server.session.DeviceSession;
-import org.jetlinks.demo.protocol.tcp.message.AuthRequest;
-import org.jetlinks.demo.protocol.tcp.message.AuthResponse;
-import org.jetlinks.demo.protocol.tcp.message.ErrorMessage;
-import org.jetlinks.demo.protocol.tcp.message.Pong;
+import org.jetlinks.demo.protocol.tcp.message.*;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
@@ -99,9 +100,36 @@ public class DemoTcpMessageCodec implements DeviceMessageCodec {
         return String.valueOf(deviceId);
     }
 
+    /**
+     * demo tcp 报文协议格式
+     * <p>
+     * 第0字节为消息类型
+     * 第1-4字节为消息体长度
+     * 第5-n为消息体
+     */
     @Override
     public Publisher<? extends EncodedMessage> encode(MessageEncodeContext context) {
-        //暂不支持
-        return Mono.empty();
+        Message message = context.getMessage();
+        EncodedMessage encodedMessage = null;
+        log.info("推送设备消息，消息ID：{}", message.getMessageId());
+        // 获取设备属性
+        if (message instanceof ReadPropertyMessage) {
+            ReadPropertyMessage readPropertyMessage = (ReadPropertyMessage) message;
+            DemoTcpMessage of = DemoTcpMessage.of(MessageType.READ_PROPERTY, ReadProperty.of(readPropertyMessage));
+            encodedMessage = EncodedMessage.simple(of.toByteBuf());
+        }
+        //修改设备属性
+        if (message instanceof WritePropertyMessage) {
+            WritePropertyMessage writePropertyMessage = (WritePropertyMessage) message;
+            DemoTcpMessage of = DemoTcpMessage.of(MessageType.WRITE_PROPERTY, WriteProperty.of(writePropertyMessage));
+            encodedMessage = EncodedMessage.simple(of.toByteBuf());
+        }
+        // 设备上报属性
+        if (message instanceof ReportPropertyMessage) {
+            ReportPropertyMessage reportPropertyMessage = (ReportPropertyMessage) message;
+            DemoTcpMessage of = DemoTcpMessage.of(MessageType.REPORT_TEMPERATURE, ReportProperty.of(reportPropertyMessage));
+            encodedMessage = EncodedMessage.simple(of.toByteBuf());
+        }
+        return encodedMessage != null ? Mono.just(encodedMessage) : Mono.empty();
     }
 }

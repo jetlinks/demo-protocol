@@ -17,7 +17,10 @@ public enum MessageType {
     REPORT_TEMPERATURE("上报温度", TemperatureReport::new),
     //    READ_TEMPERATURE("读取温度"),
 //    READ_TEMPERATURE_REPLY("读取温度回复"),
-    FIRE_ALARM("火警", FireAlarm::new);
+    FIRE_ALARM("火警", FireAlarm::new),
+    READ_PROPERTY("读取设备属性", ReadProperty::new),
+    WRITE_PROPERTY("修改设备属性", WriteProperty::new),
+    REPORT_PROPERTY("上报设备属性", ReportProperty::new);
     private String text;
 
     private Supplier<TcpPayload> payloadSupplier;
