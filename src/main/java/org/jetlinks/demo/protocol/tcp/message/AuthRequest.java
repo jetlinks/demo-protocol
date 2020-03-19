@@ -38,7 +38,7 @@ public class AuthRequest implements TcpPayload {
     @Override
     public byte[] toBytes() {
         byte[] keyBytes = key == null ? new byte[0] : key;
-        byte[] idBytes = BytesUtils.toHighBytes(deviceId);
+        byte[] idBytes = BytesUtils.longToLe(deviceId);
         byte[] data = Arrays.copyOf(idBytes, keyBytes.length + idBytes.length);
         System.arraycopy(keyBytes, 0, data, idBytes.length, keyBytes.length);
         return data;
@@ -46,7 +46,7 @@ public class AuthRequest implements TcpPayload {
 
     @Override
     public void fromBytes(byte[] bytes, int offset) {
-        this.deviceId = BytesUtils.highBytesToLong(bytes, offset, 8);
+        this.deviceId = BytesUtils.leToLong(bytes, offset, 8);
         this.key = Arrays.copyOfRange(bytes, offset + 8, bytes.length);
     }
 
