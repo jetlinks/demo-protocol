@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import io.netty.buffer.Unpooled;
 import org.jetlinks.core.message.DeviceMessage;
+import org.jetlinks.core.message.DisconnectDeviceMessage;
 import org.jetlinks.core.message.Message;
 import org.jetlinks.core.message.codec.*;
 import org.jetlinks.core.message.function.FunctionInvokeMessage;
@@ -36,15 +37,25 @@ public class DemoDeviceMessageCodec extends DemoTopicMessageCodec implements Dev
 
     public Mono<EncodedMessage> encode(MessageEncodeContext context) {
         Message message = context.getMessage();
-        return Mono.fromSupplier(() -> {
+        return Mono.defer(() -> {
             if (message instanceof DeviceMessage) {
+                if (message instanceof DisconnectDeviceMessage) {
+                    return ((ToDeviceMessageContext) context)
+                            .disconnect()
+                            .then(Mono.empty());
+                }
+
                 TopicMessage msg = doEncode((DeviceMessage) message);
-                return SimpleMqttMessage.builder()
-                        .topic(msg.getTopic())
-                        .payload(Unpooled.wrappedBuffer(JSON.toJSONBytes(msg.getMessage())))
-                        .build();
+                if (null == msg) {
+                    return Mono.empty();
+                }
+
+                return Mono.just(SimpleMqttMessage.builder()
+                                .topic(msg.getTopic())
+                                .payload(Unpooled.wrappedBuffer(JSON.toJSONBytes(msg.getMessage())))
+                                .build());
             }
-            return null;
+            return Mono.empty();
 
         });
 
