@@ -35,15 +35,15 @@ public class TemperatureReport implements TcpPayload, TcpDeviceMessage {
     public byte[] toBytes() {
         //前8位为设备ID,后4位为温度值,低位字节在前.
         byte[] data = new byte[12];
-        BytesUtils.numberToBe(data, deviceId, 0, 8);
-        BytesUtils.numberToBe(data, Float.floatToIntBits(temperature), 8, 4);
+        BytesUtils.numberToLe(data, deviceId, 0, 8);
+        BytesUtils.numberToLe(data, Float.floatToIntBits(temperature), 8, 4);
         return data;
     }
 
     @Override
     public void fromBytes(byte[] bytes, int offset) {
-        this.deviceId = BytesUtils.beToLong(bytes, offset, 8);
-        this.temperature = BytesUtils.beToLong(bytes, offset + 8, 4);
+        this.deviceId = BytesUtils.leToLong(bytes, offset, 8);
+        this.temperature = BytesUtils.leToFloat(bytes, offset + 8, 4);
     }
 
     @Override

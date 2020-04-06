@@ -60,8 +60,8 @@ public class FireAlarm implements TcpPayload, TcpDeviceMessage {
     @Override
     public void fromBytes(byte[] bytes, int offset) {
         setDeviceId(BytesUtils.leToLong(bytes, offset, 8));
-        setLnt(BytesUtils.leToLong(bytes, offset + 8, 4));
-        setLat(BytesUtils.leToLong(bytes, offset + 12, 4));
+        setLnt(BytesUtils.leToFloat(bytes, offset + 8, 4));
+        setLat(BytesUtils.leToFloat(bytes, offset + 12, 4));
         setPoint(BytesUtils.leToInt(bytes, offset + 16, 4));
     }
 }
