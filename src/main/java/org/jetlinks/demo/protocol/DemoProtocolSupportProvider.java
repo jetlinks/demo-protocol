@@ -12,6 +12,7 @@ import org.jetlinks.core.metadata.types.PasswordType;
 import org.jetlinks.core.metadata.types.StringType;
 import org.jetlinks.core.spi.ProtocolSupportProvider;
 import org.jetlinks.core.spi.ServiceContext;
+import org.jetlinks.demo.protocol.http.HttpDeviceMessageCodec;
 import org.jetlinks.demo.protocol.tcp.DemoTcpMessageCodec;
 import org.jetlinks.supports.official.JetLinksDeviceMetadataCodec;
 import reactor.core.publisher.Mono;
@@ -50,9 +51,17 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
         support.addConfigMetadata(DefaultTransport.TCP_TLS, tcpConfig);
 
 
-        //MQTT消息编解码器
-        DemoDeviceMessageCodec codec = new DemoDeviceMessageCodec();
-        support.addMessageCodecSupport(DefaultTransport.MQTT, () -> Mono.just(codec));
+        {
+            //MQTT消息编解码器
+            MqttDeviceMessageCodec codec = new MqttDeviceMessageCodec();
+            support.addMessageCodecSupport(DefaultTransport.MQTT, () -> Mono.just(codec));
+        }
+
+        {
+            //HTTP
+            HttpDeviceMessageCodec codec = new HttpDeviceMessageCodec();
+            support.addMessageCodecSupport(DefaultTransport.HTTP, () -> Mono.just(codec));
+        }
 
         //MQTT需要的配置信息
         support.addConfigMetadata(DefaultTransport.MQTT, mqttConfig);

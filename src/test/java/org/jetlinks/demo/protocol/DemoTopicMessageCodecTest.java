@@ -12,7 +12,7 @@ class DemoTopicMessageCodecTest {
 
     @Test
     void testChildrenMessage() {
-        DemoTopicMessageCodec codec = new DemoDeviceMessageCodec();
+        DemoTopicMessageCodec codec = new MqttDeviceMessageCodec();
 
         DeviceMessage message = codec.doDecode("test", "/children/fire_alarm", new JSONObject());
 

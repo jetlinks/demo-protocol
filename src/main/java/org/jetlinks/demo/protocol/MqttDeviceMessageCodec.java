@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 import java.nio.charset.StandardCharsets;
 
 
-public class DemoDeviceMessageCodec extends DemoTopicMessageCodec implements DeviceMessageCodec {
+public class MqttDeviceMessageCodec extends DemoTopicMessageCodec implements DeviceMessageCodec {
     public Transport getSupportTransport() {
         return DefaultTransport.MQTT;
     }

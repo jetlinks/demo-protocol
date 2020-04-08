@@ -96,7 +96,7 @@ public class DemoTopicMessageCodec {
         reply.setDeviceId(json.getString("deviceId"));
         reply.setOutput(json.get("output"));
         reply.setCode(json.getString("code"));
-        reply.setTimestamp(json.getLong("timestamp"));
+        reply.setTimestamp((Long) json.getOrDefault("timestamp",System.currentTimeMillis()));
         reply.setSuccess(json.getBoolean("success"));
         return reply;
     }
@@ -122,7 +122,7 @@ public class DemoTopicMessageCodec {
         reply.setProperties(json.getJSONObject("properties"));
         reply.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
         reply.setDeviceId(json.getString("deviceId"));
-        reply.setTimestamp(json.getLong("timestamp"));
+        reply.setTimestamp((Long) json.getOrDefault("timestamp",System.currentTimeMillis()));
         return reply;
     }
 
@@ -130,7 +130,7 @@ public class DemoTopicMessageCodec {
         ReadPropertyMessageReply reply = new ReadPropertyMessageReply();
         reply.setProperties(json.getJSONObject("properties"));
         reply.setMessageId(json.getString("messageId"));
-        reply.setTimestamp(json.getLong("timestamp"));
+        reply.setTimestamp((Long) json.getOrDefault("timestamp",System.currentTimeMillis()));
         reply.setDeviceId(json.getString("deviceId"));
         reply.setSuccess(json.getBoolean("success"));
         return reply;
@@ -140,7 +140,7 @@ public class DemoTopicMessageCodec {
         WritePropertyMessageReply reply = new WritePropertyMessageReply();
         reply.setProperties(json.getJSONObject("properties"));
         reply.setMessageId(json.getString("messageId"));
-        reply.setTimestamp(json.getLong("timestamp"));
+        reply.setTimestamp((Long) json.getOrDefault("timestamp",System.currentTimeMillis()));
         reply.setDeviceId(json.getString("deviceId"));
         reply.setSuccess(json.getBoolean("success"));
         return reply;
