@@ -12,7 +12,9 @@ import org.jetlinks.core.metadata.types.PasswordType;
 import org.jetlinks.core.metadata.types.StringType;
 import org.jetlinks.core.spi.ProtocolSupportProvider;
 import org.jetlinks.core.spi.ServiceContext;
+import org.jetlinks.demo.protocol.coap.CoAPDeviceMessageCodec;
 import org.jetlinks.demo.protocol.http.HttpDeviceMessageCodec;
+import org.jetlinks.demo.protocol.mqtt.MqttDeviceMessageCodec;
 import org.jetlinks.demo.protocol.tcp.DemoTcpMessageCodec;
 import org.jetlinks.supports.official.JetLinksDeviceMetadataCodec;
 import reactor.core.publisher.Mono;
@@ -61,6 +63,12 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
             //HTTP
             HttpDeviceMessageCodec codec = new HttpDeviceMessageCodec();
             support.addMessageCodecSupport(DefaultTransport.HTTP, () -> Mono.just(codec));
+        }
+
+        {
+            //CoAP
+            CoAPDeviceMessageCodec codec = new CoAPDeviceMessageCodec();
+            support.addMessageCodecSupport(DefaultTransport.CoAP, () -> Mono.just(codec));
         }
 
         //MQTT需要的配置信息

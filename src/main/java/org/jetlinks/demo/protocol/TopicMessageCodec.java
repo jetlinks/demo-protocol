@@ -16,7 +16,7 @@ import java.util.HashMap;
 
 
 @Slf4j
-public class DemoTopicMessageCodec {
+public class TopicMessageCodec {
 
     protected DeviceMessage doDecode(String deviceId, String topic, JSONObject payload) {
         DeviceMessage message = null;
