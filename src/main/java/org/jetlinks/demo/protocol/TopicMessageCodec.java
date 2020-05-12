@@ -8,6 +8,7 @@ import org.hswebframework.web.id.IDGenerator;
 import org.jetlinks.core.message.*;
 import org.jetlinks.core.message.codec.SimpleMqttMessage;
 import org.jetlinks.core.message.event.EventMessage;
+import org.jetlinks.core.message.firmware.*;
 import org.jetlinks.core.message.function.FunctionInvokeMessage;
 import org.jetlinks.core.message.function.FunctionInvokeMessageReply;
 import org.jetlinks.core.message.property.*;
@@ -28,7 +29,7 @@ public class TopicMessageCodec {
             message = handleRegister(payload);
         } else if (topic.startsWith("/unregister")) {
             message = handleUnRegister(payload);
-        }  else if (topic.startsWith("/dev_msg")) {
+        } else if (topic.startsWith("/dev_msg")) {
             message = handleDeviceMessage(topic, payload);
         } else if (topic.startsWith("/device_online_status")) {
             message = handleDeviceOnlineStatus(topic, payload);
@@ -47,6 +48,14 @@ public class TopicMessageCodec {
             childDeviceMessage.setChildDeviceMessage(children);
             childDeviceMessage.setChildDeviceId(children.getDeviceId());
             message = childDeviceMessage;
+        }
+        // 固件相关1.0.3版本后增加,注意: 专业版中才有固件相关业务功能
+        else if (topic.startsWith("/firmware/report")) {//上报固件信息
+            message = payload.toJavaObject(ReportFirmwareMessage.class);
+        } else if (topic.startsWith("/firmware/progress")) { //上报升级进度
+            message = payload.toJavaObject(UpgradeFirmwareProgressMessage.class);
+        } else if (topic.startsWith("/firmware/pull")) { //拉取固件信息
+            message = payload.toJavaObject(RequestFirmwareMessage.class);
         }
 
         log.info("handle demo message:{}:{}", topic, payload);
@@ -86,6 +95,15 @@ public class TopicMessageCodec {
             String topic = "/children" + msg.getTopic();
             return new TopicMessage(topic, msg.getMessage());
         }
+
+        //平台推送固件更新,设备无需回复此消息.
+        else if (
+            message instanceof UpgradeFirmwareMessage ||
+                message instanceof RequestFirmwareMessageReply
+        ) {
+            String topic = "/firmware/push";
+            return new TopicMessage(topic, JSON.toJSON(message));
+        }
         return null;
     }
 
@@ -96,7 +114,7 @@ public class TopicMessageCodec {
         reply.setDeviceId(json.getString("deviceId"));
         reply.setOutput(json.get("output"));
         reply.setCode(json.getString("code"));
-        reply.setTimestamp((Long) json.getOrDefault("timestamp",System.currentTimeMillis()));
+        reply.setTimestamp((Long) json.getOrDefault("timestamp", System.currentTimeMillis()));
         reply.setSuccess(json.getBoolean("success"));
         return reply;
     }
@@ -122,7 +140,7 @@ public class TopicMessageCodec {
         reply.setProperties(json.getJSONObject("properties"));
         reply.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
         reply.setDeviceId(json.getString("deviceId"));
-        reply.setTimestamp((Long) json.getOrDefault("timestamp",System.currentTimeMillis()));
+        reply.setTimestamp((Long) json.getOrDefault("timestamp", System.currentTimeMillis()));
         return reply;
     }
 
@@ -130,7 +148,7 @@ public class TopicMessageCodec {
         ReadPropertyMessageReply reply = new ReadPropertyMessageReply();
         reply.setProperties(json.getJSONObject("properties"));
         reply.setMessageId(json.getString("messageId"));
-        reply.setTimestamp((Long) json.getOrDefault("timestamp",System.currentTimeMillis()));
+        reply.setTimestamp((Long) json.getOrDefault("timestamp", System.currentTimeMillis()));
         reply.setDeviceId(json.getString("deviceId"));
         reply.setSuccess(json.getBoolean("success"));
         return reply;
@@ -140,7 +158,7 @@ public class TopicMessageCodec {
         WritePropertyMessageReply reply = new WritePropertyMessageReply();
         reply.setProperties(json.getJSONObject("properties"));
         reply.setMessageId(json.getString("messageId"));
-        reply.setTimestamp((Long) json.getOrDefault("timestamp",System.currentTimeMillis()));
+        reply.setTimestamp((Long) json.getOrDefault("timestamp", System.currentTimeMillis()));
         reply.setDeviceId(json.getString("deviceId"));
         reply.setSuccess(json.getBoolean("success"));
         return reply;
