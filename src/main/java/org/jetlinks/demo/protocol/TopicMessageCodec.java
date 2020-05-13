@@ -108,15 +108,15 @@ public class TopicMessageCodec {
     }
 
     private FunctionInvokeMessageReply handleFunctionInvokeReply(JSONObject json) {
-        FunctionInvokeMessageReply reply = new FunctionInvokeMessageReply();
-        reply.setFunctionId(json.getString("functionId"));
-        reply.setMessageId(json.getString("messageId"));
-        reply.setDeviceId(json.getString("deviceId"));
-        reply.setOutput(json.get("output"));
-        reply.setCode(json.getString("code"));
-        reply.setTimestamp((Long) json.getOrDefault("timestamp", System.currentTimeMillis()));
-        reply.setSuccess(json.getBoolean("success"));
-        return reply;
+//        FunctionInvokeMessageReply reply = new FunctionInvokeMessageReply();
+//        reply.setFunctionId(json.getString("functionId"));
+//        reply.setMessageId(json.getString("messageId"));
+//        reply.setDeviceId(json.getString("deviceId"));
+//        reply.setOutput(json.get("output"));
+//        reply.setCode(json.getString("code"));
+//        reply.setTimestamp( (Long) json.getOrDefault("timestamp", System.currentTimeMillis()));
+//        reply.setSuccess(json.getBoolean("success"));
+        return json.toJavaObject(FunctionInvokeMessageReply.class);
     }
 
     private DeviceRegisterMessage handleRegister(JSONObject json) {
@@ -136,32 +136,32 @@ public class TopicMessageCodec {
     }
 
     private ReportPropertyMessage handleReportProperty(JSONObject json) {
-        ReportPropertyMessage reply = new ReportPropertyMessage();
-        reply.setProperties(json.getJSONObject("properties"));
-        reply.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
-        reply.setDeviceId(json.getString("deviceId"));
-        reply.setTimestamp((Long) json.getOrDefault("timestamp", System.currentTimeMillis()));
-        return reply;
+//        ReportPropertyMessage reply = new ReportPropertyMessage();
+//        reply.setProperties(json.getJSONObject("properties"));
+//        reply.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
+//        reply.setDeviceId(json.getString("deviceId"));
+//        reply.setTimestamp((Long) json.getOrDefault("timestamp", System.currentTimeMillis()));
+        return json.toJavaObject(ReportPropertyMessage.class);
     }
 
     private ReadPropertyMessageReply handleReadPropertyReply(JSONObject json) {
-        ReadPropertyMessageReply reply = new ReadPropertyMessageReply();
-        reply.setProperties(json.getJSONObject("properties"));
-        reply.setMessageId(json.getString("messageId"));
-        reply.setTimestamp((Long) json.getOrDefault("timestamp", System.currentTimeMillis()));
-        reply.setDeviceId(json.getString("deviceId"));
-        reply.setSuccess(json.getBoolean("success"));
-        return reply;
+//        ReadPropertyMessageReply reply = new ReadPropertyMessageReply();
+//        reply.setProperties(json.getJSONObject("properties"));
+//        reply.setMessageId(json.getString("messageId"));
+//        reply.setTimestamp((Long) json.getOrDefault("timestamp", System.currentTimeMillis()));
+//        reply.setDeviceId(json.getString("deviceId"));
+//        reply.setSuccess(json.getBoolean("success"));
+        return json.toJavaObject(ReadPropertyMessageReply.class);
     }
 
     private WritePropertyMessageReply handleWritePropertyReply(JSONObject json) {
-        WritePropertyMessageReply reply = new WritePropertyMessageReply();
-        reply.setProperties(json.getJSONObject("properties"));
-        reply.setMessageId(json.getString("messageId"));
-        reply.setTimestamp((Long) json.getOrDefault("timestamp", System.currentTimeMillis()));
-        reply.setDeviceId(json.getString("deviceId"));
-        reply.setSuccess(json.getBoolean("success"));
-        return reply;
+//        WritePropertyMessageReply reply = new WritePropertyMessageReply();
+//        reply.setProperties(json.getJSONObject("properties"));
+//        reply.setMessageId(json.getString("messageId"));
+//        reply.setTimestamp((Long) json.getOrDefault("timestamp", System.currentTimeMillis()));
+//        reply.setDeviceId(json.getString("deviceId"));
+//        reply.setSuccess(json.getBoolean("success"));
+        return json.toJavaObject(WritePropertyMessageReply.class);
     }
 
     private EventMessage handleFireAlarm(String topic, JSONObject json) {
