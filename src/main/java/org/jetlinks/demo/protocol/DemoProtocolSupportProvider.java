@@ -18,6 +18,7 @@ import org.jetlinks.demo.protocol.mqtt.MqttDeviceMessageCodec;
 import org.jetlinks.demo.protocol.tcp.DemoTcpMessageCodec;
 import org.jetlinks.demo.protocol.websocket.WebsocketDeviceMessageCodec;
 import org.jetlinks.supports.official.JetLinksDeviceMetadataCodec;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
@@ -61,9 +62,12 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
         }
 
         {
-            //HTTP
-            HttpDeviceMessageCodec codec = new HttpDeviceMessageCodec();
-            support.addMessageCodecSupport(DefaultTransport.HTTP, () -> Mono.just(codec));
+           context.getService(WebClient.Builder.class)
+               .ifPresent(builder -> {
+                   //HTTP
+                   HttpDeviceMessageCodec codec = new HttpDeviceMessageCodec(builder.build());
+                   support.addMessageCodecSupport(DefaultTransport.HTTP, () -> Mono.just(codec));
+               });
         }
 
         {
