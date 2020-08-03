@@ -41,6 +41,8 @@ public class TopicMessageCodec {
             message = handleWritePropertyReply(payload);
         } else if (topic.startsWith("/invoke-function")) {
             message = handleFunctionInvokeReply(payload);
+        } else if (topic.startsWith("/open-door")) {
+            message = handleOpenTheDoor(topic, payload);
         } else if (topic.startsWith("/children")) {
             ChildDeviceMessage childDeviceMessage = new ChildDeviceMessage();
             childDeviceMessage.setDeviceId(deviceId);
@@ -145,6 +147,17 @@ public class TopicMessageCodec {
 
         eventMessage.setDeviceId(json.getString("deviceId"));
         eventMessage.setEvent("fire_alarm");
+        eventMessage.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
+
+        eventMessage.setData(new HashMap<>(json));
+        return eventMessage;
+    }
+
+    private EventMessage handleOpenTheDoor(String topic, JSONObject json) {
+        EventMessage eventMessage = new EventMessage();
+
+        eventMessage.setDeviceId(json.getString("deviceId"));
+        eventMessage.setEvent("open-door");
         eventMessage.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
 
         eventMessage.setData(new HashMap<>(json));
