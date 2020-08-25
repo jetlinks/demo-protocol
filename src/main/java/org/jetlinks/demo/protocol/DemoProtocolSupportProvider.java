@@ -55,6 +55,26 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
         support.addConfigMetadata(DefaultTransport.TCP, tcpConfig);
         support.addConfigMetadata(DefaultTransport.TCP_TLS, tcpConfig);
 
+//        support.addMessageSenderInterceptor(new DeviceMessageSenderInterceptor() {
+//            @Override
+//            public <R extends DeviceMessage> Flux<R> afterSent(DeviceOperator device, DeviceMessage message, Flux<R> reply) {
+//
+//                return reply.onErrorResume(DeviceOperationException.class, err -> {
+//                    if (err.getCode() == ErrorCode.CLIENT_OFFLINE) {
+//                        return device
+//                            .setConfig("will-msg", message) //设置到缓存中
+//                            .thenReturn(((RepayableDeviceMessage<?>) message)
+//                                .newReply()
+//                                .code(ErrorCode.REQUEST_HANDLING.name())
+//                                .message("设备处理中...")
+//                                .success()
+//                            )
+//                            .map(r -> (R) r);
+//                    }
+//                    return Mono.error(err);
+//                });
+//            }
+//        });
 
         {
             //MQTT消息编解码器
