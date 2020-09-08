@@ -16,6 +16,7 @@ import org.jetlinks.demo.protocol.coap.CoAPDeviceMessageCodec;
 import org.jetlinks.demo.protocol.http.HttpDeviceMessageCodec;
 import org.jetlinks.demo.protocol.mqtt.MqttDeviceMessageCodec;
 import org.jetlinks.demo.protocol.tcp.DemoTcpMessageCodec;
+import org.jetlinks.demo.protocol.udp.DemoUdpMessageCodec;
 import org.jetlinks.demo.protocol.websocket.WebsocketDeviceMessageCodec;
 import org.jetlinks.supports.official.JetLinksDeviceMetadataCodec;
 import reactor.core.publisher.Mono;
@@ -33,6 +34,11 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
         "TCP认证配置"
         , "")
         .add("tcp_auth_key", "key", "TCP认证KEY", new StringType());
+
+    private static final DefaultConfigMetadata udpConfig = new DefaultConfigMetadata(
+            "UDP认证配置"
+            , "")
+            .add("udp_auth_key", "key", "UDP认证KEY", new StringType());
 
     @Override
     public Mono<? extends ProtocolSupport> create(ServiceContext context) {
@@ -53,6 +59,16 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
         support.addConfigMetadata(DefaultTransport.TCP, tcpConfig);
         support.addConfigMetadata(DefaultTransport.TCP_TLS, tcpConfig);
 
+        context.getService(DeviceRegistry.class)
+                .ifPresent(deviceRegistry -> {
+                    //UDP消息编解码器
+                    DemoUdpMessageCodec codec = new DemoUdpMessageCodec(deviceRegistry);
+                    support.addMessageCodecSupport(DefaultTransport.UDP, () -> Mono.just(codec));
+                    support.addMessageCodecSupport(DefaultTransport.UDP_DTLS, () -> Mono.just(codec));
+
+                });
+        support.addConfigMetadata(DefaultTransport.UDP, udpConfig);
+        support.addConfigMetadata(DefaultTransport.UDP_DTLS, udpConfig);
 
         {
             //MQTT消息编解码器

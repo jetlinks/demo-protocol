@@ -32,6 +32,8 @@ public class FireAlarm implements TcpPayload, TcpDeviceMessage {
     //点位
     private int point;
 
+    private String bName;
+
     @Override
     public DeviceMessage toDeviceMessage() {
         EventMessage message = new EventMessage();
@@ -41,6 +43,7 @@ public class FireAlarm implements TcpPayload, TcpDeviceMessage {
         map.put("lnt", lnt);
         map.put("lat", lat);
         map.put("point", point);
+        map.put("b_name", bName);
         message.setData(map);
         message.setDeviceId(String.valueOf(deviceId));
         return message;
