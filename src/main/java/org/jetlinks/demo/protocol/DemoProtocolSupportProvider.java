@@ -2,9 +2,10 @@ package org.jetlinks.demo.protocol;
 
 import org.jetlinks.core.ProtocolSupport;
 import org.jetlinks.core.Value;
-import org.jetlinks.core.defaults.Authenticator;
 import org.jetlinks.core.defaults.CompositeProtocolSupport;
-import org.jetlinks.core.device.*;
+import org.jetlinks.core.device.AuthenticationResponse;
+import org.jetlinks.core.device.DeviceRegistry;
+import org.jetlinks.core.device.MqttAuthenticationRequest;
 import org.jetlinks.core.message.codec.DefaultTransport;
 import org.jetlinks.core.metadata.DefaultConfigMetadata;
 import org.jetlinks.core.metadata.types.PasswordType;
@@ -15,12 +16,10 @@ import org.jetlinks.demo.protocol.coap.CoAPDeviceMessageCodec;
 import org.jetlinks.demo.protocol.http.HttpDeviceMessageCodec;
 import org.jetlinks.demo.protocol.mqtt.MqttDeviceMessageCodec;
 import org.jetlinks.demo.protocol.tcp.DemoTcpMessageCodec;
+import org.jetlinks.demo.protocol.udp.DemoUdpMessageCodec;
 import org.jetlinks.demo.protocol.websocket.WebsocketDeviceMessageCodec;
 import org.jetlinks.supports.official.JetLinksDeviceMetadataCodec;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
-import javax.annotation.Nonnull;
 
 public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
 
@@ -35,6 +34,11 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
         "TCP认证配置"
         , "")
         .add("tcp_auth_key", "key", "TCP认证KEY", new StringType());
+
+    private static final DefaultConfigMetadata udpConfig = new DefaultConfigMetadata(
+            "UDP认证配置"
+            , "")
+            .add("udp_auth_key", "key", "UDP认证KEY", new StringType());
 
     @Override
     public Mono<? extends ProtocolSupport> create(ServiceContext context) {
@@ -55,26 +59,16 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
         support.addConfigMetadata(DefaultTransport.TCP, tcpConfig);
         support.addConfigMetadata(DefaultTransport.TCP_TLS, tcpConfig);
 
-//        support.addMessageSenderInterceptor(new DeviceMessageSenderInterceptor() {
-//            @Override
-//            public <R extends DeviceMessage> Flux<R> afterSent(DeviceOperator device, DeviceMessage message, Flux<R> reply) {
-//
-//                return reply.onErrorResume(DeviceOperationException.class, err -> {
-//                    if (err.getCode() == ErrorCode.CLIENT_OFFLINE) {
-//                        return device
-//                            .setConfig("will-msg", message) //设置到缓存中
-//                            .thenReturn(((RepayableDeviceMessage<?>) message)
-//                                .newReply()
-//                                .code(ErrorCode.REQUEST_HANDLING.name())
-//                                .message("设备处理中...")
-//                                .success()
-//                            )
-//                            .map(r -> (R) r);
-//                    }
-//                    return Mono.error(err);
-//                });
-//            }
-//        });
+        context.getService(DeviceRegistry.class)
+                .ifPresent(deviceRegistry -> {
+                    //UDP消息编解码器
+                    DemoUdpMessageCodec codec = new DemoUdpMessageCodec(deviceRegistry);
+                    support.addMessageCodecSupport(DefaultTransport.UDP, () -> Mono.just(codec));
+                    support.addMessageCodecSupport(DefaultTransport.UDP_DTLS, () -> Mono.just(codec));
+
+                });
+        support.addConfigMetadata(DefaultTransport.UDP, udpConfig);
+        support.addConfigMetadata(DefaultTransport.UDP_DTLS, udpConfig);
 
         {
             //MQTT消息编解码器
@@ -83,12 +77,9 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
         }
 
         {
-            context.getService(WebClient.Builder.class)
-                .ifPresent(builder -> {
-                    //HTTP
-                    HttpDeviceMessageCodec codec = new HttpDeviceMessageCodec(builder.build());
-                    support.addMessageCodecSupport(DefaultTransport.HTTP, () -> Mono.just(codec));
-                });
+            //HTTP
+            HttpDeviceMessageCodec codec = new HttpDeviceMessageCodec();
+            support.addMessageCodecSupport(DefaultTransport.HTTP, () -> Mono.just(codec));
         }
 
         {
