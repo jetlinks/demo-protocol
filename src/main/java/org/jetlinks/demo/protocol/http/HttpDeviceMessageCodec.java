@@ -21,7 +21,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class HttpDeviceMessageCodec extends TopicMessageCodec implements DeviceMessageCodec {
 
-    WebClient webClient;
+    //WebClient webClient;
 
     public Transport getSupportTransport() {
         return DefaultTransport.HTTP;

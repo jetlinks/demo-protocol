@@ -2,10 +2,9 @@ package org.jetlinks.demo.protocol;
 
 import org.jetlinks.core.ProtocolSupport;
 import org.jetlinks.core.Value;
+import org.jetlinks.core.defaults.Authenticator;
 import org.jetlinks.core.defaults.CompositeProtocolSupport;
-import org.jetlinks.core.device.AuthenticationResponse;
-import org.jetlinks.core.device.DeviceRegistry;
-import org.jetlinks.core.device.MqttAuthenticationRequest;
+import org.jetlinks.core.device.*;
 import org.jetlinks.core.message.codec.DefaultTransport;
 import org.jetlinks.core.metadata.DefaultConfigMetadata;
 import org.jetlinks.core.metadata.types.PasswordType;
@@ -20,6 +19,8 @@ import org.jetlinks.demo.protocol.udp.DemoUdpMessageCodec;
 import org.jetlinks.demo.protocol.websocket.WebsocketDeviceMessageCodec;
 import org.jetlinks.supports.official.JetLinksDeviceMetadataCodec;
 import reactor.core.publisher.Mono;
+
+import javax.annotation.Nonnull;
 
 public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
 
