@@ -8,6 +8,7 @@ import org.jetlinks.core.defaults.CompositeProtocolSupport;
 import org.jetlinks.core.device.*;
 import org.jetlinks.core.message.codec.DefaultTransport;
 import org.jetlinks.core.metadata.DefaultConfigMetadata;
+import org.jetlinks.core.metadata.types.IntType;
 import org.jetlinks.core.metadata.types.PasswordType;
 import org.jetlinks.core.metadata.types.StringType;
 import org.jetlinks.core.server.session.DeviceSessionManager;
@@ -37,19 +38,25 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
     private static final DefaultConfigMetadata mqttConfig = new DefaultConfigMetadata(
         "MQTT认证配置"
         , "")
-        .add("username", "username", "MQTT用户名", new StringType())
-        .add("password", "password", "MQTT密码", new PasswordType());
+        .add("username", "username", "MQTT用户名", StringType.GLOBAL)
+        .add("password", "password", "MQTT密码", PasswordType.GLOBAL);
 
 
     private static final DefaultConfigMetadata tcpConfig = new DefaultConfigMetadata(
         "TCP认证配置"
         , "")
-        .add("tcp_auth_key", "key", "TCP认证KEY", new StringType());
+        .add("tcp_auth_key", "key", "TCP认证KEY",StringType.GLOBAL);
 
     private static final DefaultConfigMetadata udpConfig = new DefaultConfigMetadata(
         "UDP认证配置"
         , "")
-        .add("udp_auth_key", "key", "UDP认证KEY", new StringType());
+        .add("udp_auth_key", "key", "UDP认证KEY",StringType.GLOBAL);
+
+    private static final DefaultConfigMetadata tcpClientConfig = new DefaultConfigMetadata(
+        "远程服务配置"
+        , "")
+        .add("host", "host", "host", StringType.GLOBAL)
+        .add("port", "port", "host", IntType.GLOBAL);
 
     @Override
     public Mono<? extends ProtocolSupport> create(ServiceContext context) {
@@ -147,7 +154,7 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
 
         //tcp client,通过tcp客户端连接其他服务处理设备消息
         {
-//
+//            support.addConfigMetadata(DefaultTransport.TCP, tcpClientConfig);
 //            return Mono
 //                .zip(
 //                    Mono.justOrEmpty(context.getService(DecodedClientMessageHandler.class)),
