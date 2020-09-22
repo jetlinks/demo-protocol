@@ -11,6 +11,7 @@ import org.jetlinks.core.device.DeviceStateChecker;
 import org.jetlinks.core.server.session.DeviceSession;
 import org.jetlinks.core.server.session.DeviceSessionManager;
 import org.jetlinks.supports.server.DecodedClientMessageHandler;
+import org.springframework.util.StringUtils;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 
@@ -34,8 +35,11 @@ public class TcpClientMessageSupport implements Disposable, DeviceStateChecker {
         return deviceOperator
             .getSelfConfigs("host", "port")
             .flatMap(values -> {
-                String host = values.getValue("host").map(Value::asString).orElseThrow(() -> new IllegalArgumentException("host 不能为空"));
+                String host = values.getValue("host").map(Value::asString).orElse(null);
                 int port = values.getValue("port").map(Value::asInt).orElseThrow(() -> new IllegalArgumentException("host 不能为空"));
+                if(StringUtils.isEmpty(host)){
+                    return Mono.empty();
+                }
                 // TODO: 2020/9/22 重试连接逻辑实现
                 return Mono.create(sink -> vertx
                     .createNetClient()
@@ -69,7 +73,9 @@ public class TcpClientMessageSupport implements Disposable, DeviceStateChecker {
 
     @Override
     public @NotNull Mono<Byte> checkState(@NotNull DeviceOperator device) {
-        return getOrCreateSession(device).map(session -> session.isAlive() ? DeviceState.online : DeviceState.offline);
+        return getOrCreateSession(device)
+            .map(session -> session.isAlive() ? DeviceState.online : DeviceState.offline)
+            .defaultIfEmpty(DeviceState.offline);
     }
 
     @Override
