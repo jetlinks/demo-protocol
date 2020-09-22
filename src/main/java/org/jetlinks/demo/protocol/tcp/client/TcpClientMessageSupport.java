@@ -36,10 +36,11 @@ public class TcpClientMessageSupport implements Disposable, DeviceStateChecker {
             .getSelfConfigs("host", "port")
             .flatMap(values -> {
                 String host = values.getValue("host").map(Value::asString).orElse(null);
-                int port = values.getValue("port").map(Value::asInt).orElseThrow(() -> new IllegalArgumentException("host 不能为空"));
-                if(StringUtils.isEmpty(host)){
+                int port = values.getValue("port").map(Value::asInt).orElse(0);
+                if (StringUtils.isEmpty(host) || port == 0) {
                     return Mono.empty();
                 }
+
                 // TODO: 2020/9/22 重试连接逻辑实现
                 return Mono.create(sink -> vertx
                     .createNetClient()
