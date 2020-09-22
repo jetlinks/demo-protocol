@@ -1,5 +1,6 @@
 package org.jetlinks.demo.protocol;
 
+import io.vertx.core.Vertx;
 import org.jetlinks.core.ProtocolSupport;
 import org.jetlinks.core.Value;
 import org.jetlinks.core.defaults.Authenticator;
@@ -9,20 +10,29 @@ import org.jetlinks.core.message.codec.DefaultTransport;
 import org.jetlinks.core.metadata.DefaultConfigMetadata;
 import org.jetlinks.core.metadata.types.PasswordType;
 import org.jetlinks.core.metadata.types.StringType;
+import org.jetlinks.core.server.session.DeviceSessionManager;
 import org.jetlinks.core.spi.ProtocolSupportProvider;
 import org.jetlinks.core.spi.ServiceContext;
 import org.jetlinks.demo.protocol.coap.CoAPDeviceMessageCodec;
 import org.jetlinks.demo.protocol.http.HttpDeviceMessageCodec;
 import org.jetlinks.demo.protocol.mqtt.MqttDeviceMessageCodec;
 import org.jetlinks.demo.protocol.tcp.DemoTcpMessageCodec;
+import org.jetlinks.demo.protocol.tcp.client.TcpClientMessageSupport;
 import org.jetlinks.demo.protocol.udp.DemoUdpMessageCodec;
 import org.jetlinks.demo.protocol.websocket.WebsocketDeviceMessageCodec;
 import org.jetlinks.supports.official.JetLinksDeviceMetadataCodec;
+import org.jetlinks.supports.server.DecodedClientMessageHandler;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Nonnull;
 
 public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
+
+
+    @Override
+    public void close() {
+        //协议卸载时执行
+    }
 
     private static final DefaultConfigMetadata mqttConfig = new DefaultConfigMetadata(
         "MQTT认证配置"
@@ -37,9 +47,9 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
         .add("tcp_auth_key", "key", "TCP认证KEY", new StringType());
 
     private static final DefaultConfigMetadata udpConfig = new DefaultConfigMetadata(
-            "UDP认证配置"
-            , "")
-            .add("udp_auth_key", "key", "UDP认证KEY", new StringType());
+        "UDP认证配置"
+        , "")
+        .add("udp_auth_key", "key", "UDP认证KEY", new StringType());
 
     @Override
     public Mono<? extends ProtocolSupport> create(ServiceContext context) {
@@ -61,13 +71,13 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
         support.addConfigMetadata(DefaultTransport.TCP_TLS, tcpConfig);
 
         context.getService(DeviceRegistry.class)
-                .ifPresent(deviceRegistry -> {
-                    //UDP消息编解码器
-                    DemoUdpMessageCodec codec = new DemoUdpMessageCodec(deviceRegistry);
-                    support.addMessageCodecSupport(DefaultTransport.UDP, () -> Mono.just(codec));
-                    support.addMessageCodecSupport(DefaultTransport.UDP_DTLS, () -> Mono.just(codec));
+            .ifPresent(deviceRegistry -> {
+                //UDP消息编解码器
+                DemoUdpMessageCodec codec = new DemoUdpMessageCodec(deviceRegistry);
+                support.addMessageCodecSupport(DefaultTransport.UDP, () -> Mono.just(codec));
+                support.addMessageCodecSupport(DefaultTransport.UDP_DTLS, () -> Mono.just(codec));
 
-                });
+            });
         support.addConfigMetadata(DefaultTransport.UDP, udpConfig);
         support.addConfigMetadata(DefaultTransport.UDP_DTLS, udpConfig);
 
@@ -134,6 +144,23 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
                         }));
             }
         });
+
+        //tcp client,通过tcp客户端连接其他服务处理设备消息
+        {
+//
+//            return Mono
+//                .zip(
+//                    Mono.justOrEmpty(context.getService(DecodedClientMessageHandler.class)),
+//                    Mono.justOrEmpty(context.getService(DeviceSessionManager.class)),
+//                    Mono.justOrEmpty(context.getService(Vertx.class))
+//                )
+//                .map(tp3 -> new TcpClientMessageSupport(tp3.getT1(), tp3.getT2(), tp3.getT3())).doOnNext(tcp -> {
+//                    //设置状态检查
+//                    //support.setDeviceStateChecker(tcp);
+//                })
+//                .thenReturn(support);
+
+        }
 
         return Mono.just(support);
     }
