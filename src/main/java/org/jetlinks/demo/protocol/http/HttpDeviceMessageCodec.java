@@ -1,22 +1,15 @@
 package org.jetlinks.demo.protocol.http;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import io.netty.buffer.Unpooled;
-import io.vertx.core.Vertx;
 import lombok.AllArgsConstructor;
-import org.jetlinks.core.message.DeviceMessage;
 import org.jetlinks.core.message.Message;
 import org.jetlinks.core.message.codec.*;
 import org.jetlinks.core.message.codec.http.HttpExchangeMessage;
 import org.jetlinks.core.message.codec.http.SimpleHttpResponseMessage;
 import org.jetlinks.demo.protocol.TopicMessageCodec;
 import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 @AllArgsConstructor
 public class HttpDeviceMessageCodec extends TopicMessageCodec implements DeviceMessageCodec {
@@ -31,16 +24,15 @@ public class HttpDeviceMessageCodec extends TopicMessageCodec implements DeviceM
     public Mono<? extends Message> decode(MessageDecodeContext context) {
 
         return Mono.defer(() -> {
-            HttpExchangeMessage mqttMessage = (HttpExchangeMessage) context.getMessage();
+            HttpExchangeMessage message = (HttpExchangeMessage) context.getMessage();
 
-            String topic = mqttMessage.getUrl();
-            JSONObject payload = JSON.parseObject(mqttMessage.getPayload().toString(StandardCharsets.UTF_8));
-
+            String topic = message.getUrl();
+            JSONObject payload = message.payloadAsJson();
 
             return Mono.justOrEmpty(doDecode(null, topic, payload))
                 .switchIfEmpty(Mono.defer(() -> {
                     //未转换成功，响应404
-                    return mqttMessage.response(SimpleHttpResponseMessage
+                    return message.response(SimpleHttpResponseMessage
                         .builder()
                         .status(404)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -49,7 +41,7 @@ public class HttpDeviceMessageCodec extends TopicMessageCodec implements DeviceM
                 }))
                 .flatMap(msg -> {
                     //响应成功
-                    return mqttMessage.response(SimpleHttpResponseMessage
+                    return message.response(SimpleHttpResponseMessage
                         .builder()
                         .status(200)
                         .contentType(MediaType.APPLICATION_JSON)
