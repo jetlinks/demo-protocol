@@ -46,8 +46,9 @@ public class TcpClientMessageSupport implements Disposable, DeviceStateChecker {
                     .createNetClient()
                     .connect(port, host, async -> {
                         if (async.succeeded()) {
-                            DeviceSession deviceSession = new TcpClientDeviceSession(deviceOperator, async.result());
-                            handleSocket(async.result(), deviceOperator);
+                            NetSocket socket=async.result();
+                            DeviceSession deviceSession = new TcpClientDeviceSession(deviceOperator, socket);
+                            handleSocket(socket, deviceOperator);
 
                             sessionManager.register(deviceSession);
                             sink.success(deviceSession);

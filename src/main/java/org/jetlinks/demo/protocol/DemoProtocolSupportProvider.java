@@ -45,12 +45,12 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
     private static final DefaultConfigMetadata tcpConfig = new DefaultConfigMetadata(
         "TCP认证配置"
         , "")
-        .add("tcp_auth_key", "key", "TCP认证KEY",StringType.GLOBAL);
+        .add("tcp_auth_key", "key", "TCP认证KEY", StringType.GLOBAL);
 
     private static final DefaultConfigMetadata udpConfig = new DefaultConfigMetadata(
         "UDP认证配置"
         , "")
-        .add("udp_auth_key", "key", "UDP认证KEY",StringType.GLOBAL);
+        .add("udp_auth_key", "key", "UDP认证KEY", StringType.GLOBAL);
 
     private static final DefaultConfigMetadata tcpClientConfig = new DefaultConfigMetadata(
         "远程服务配置"
@@ -65,7 +65,6 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
         support.setName("演示协议v1");
         support.setDescription("演示协议");
         support.setMetadataCodec(new JetLinksDeviceMetadataCodec());
-
         context.getService(DeviceRegistry.class)
             .ifPresent(deviceRegistry -> {
                 //TCP消息编解码器
@@ -152,8 +151,8 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
             }
         });
 
-        //tcp client,通过tcp客户端连接其他服务处理设备消息
-        {
+//        //tcp client,通过tcp客户端连接其他服务处理设备消息
+//        {
 //            support.addConfigMetadata(DefaultTransport.TCP, tcpClientConfig);
 //            return Mono
 //                .zip(
@@ -161,13 +160,15 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
 //                    Mono.justOrEmpty(context.getService(DeviceSessionManager.class)),
 //                    Mono.justOrEmpty(context.getService(Vertx.class))
 //                )
-//                .map(tp3 -> new TcpClientMessageSupport(tp3.getT1(), tp3.getT2(), tp3.getT3())).doOnNext(tcp -> {
+//                .map(tp3 -> new TcpClientMessageSupport(tp3.getT1(), tp3.getT2(), tp3.getT3()))
+//                .doOnNext(tcp -> {
 //                    //设置状态检查
-//                    //support.setDeviceStateChecker(tcp);
+//                    support.setDeviceStateChecker(tcp);
+//                    support.doOnDispose(tcp); //协议失效时执行
 //                })
 //                .thenReturn(support);
-
-        }
+//
+//        }
 
         return Mono.just(support);
     }
