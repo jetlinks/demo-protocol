@@ -15,6 +15,7 @@ import org.jetlinks.core.server.session.DeviceSessionManager;
 import org.jetlinks.core.spi.ProtocolSupportProvider;
 import org.jetlinks.core.spi.ServiceContext;
 import org.jetlinks.demo.protocol.coap.CoAPDeviceMessageCodec;
+import org.jetlinks.demo.protocol.http.HttpClientDeviceMessageCodec;
 import org.jetlinks.demo.protocol.http.HttpDeviceMessageCodec;
 import org.jetlinks.demo.protocol.mqtt.MqttDeviceMessageCodec;
 import org.jetlinks.demo.protocol.tcp.DemoTcpMessageCodec;
@@ -23,6 +24,7 @@ import org.jetlinks.demo.protocol.udp.DemoUdpMessageCodec;
 import org.jetlinks.demo.protocol.websocket.WebsocketDeviceMessageCodec;
 import org.jetlinks.supports.official.JetLinksDeviceMetadataCodec;
 import org.jetlinks.supports.server.DecodedClientMessageHandler;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Nonnull;
@@ -31,7 +33,7 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
 
 
     @Override
-    public void close() {
+    public void dispose() {
         //协议卸载时执行
     }
 
@@ -98,6 +100,22 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
             HttpDeviceMessageCodec codec = new HttpDeviceMessageCodec();
             support.addMessageCodecSupport(DefaultTransport.HTTP, () -> Mono.just(codec));
         }
+
+        {
+            //HTTP Client
+            Mono.zip(
+                Mono.justOrEmpty(context.getService(DeviceRegistry.class)),
+                Mono.justOrEmpty(context.getService(DeviceSessionManager.class)),
+                HttpClientDeviceMessageCodec::new
+                )
+                .subscribe(codec -> {
+
+                    //注册到协议
+                    //support.addMessageCodecSupport(DefaultTransport.HTTP, () -> Mono.just(codec));
+
+                });
+        }
+
 
         {
             //CoAP
