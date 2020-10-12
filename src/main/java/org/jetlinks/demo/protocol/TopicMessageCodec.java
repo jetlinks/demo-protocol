@@ -58,6 +58,8 @@ public class TopicMessageCodec {
             message = payload.toJavaObject(UpgradeFirmwareProgressMessage.class);
         } else if (topic.startsWith("/firmware/pull")) { //拉取固件信息
             message = payload.toJavaObject(RequestFirmwareMessage.class);
+        } else if (topic.startsWith("/tags")) { //更新tags
+            message = payload.toJavaObject(UpdateTagMessage.class);
         }
 
         log.info("handle demo message:{}:{}", topic, payload);
