@@ -31,7 +31,7 @@ public class DemoTcpSimulator {
      var BytesUtils = org.jetlinks.core.utils.BytesUtils;
      parser.fixed(5) //1. 固定5字节为报文头,0字节为类型,1-4字节为消息长度(低字节位在前).
        .handler(function(buffer){
-            var len = BytesUtils.highBytesToInt(buffer.getBytes(),1,4);//2. 获取消息长度.
+            var len = BytesUtils.beToInt(buffer.getBytes(),1,4);//2. 获取消息长度.
             parser
                .fixed(len)//3. 设置下一个包要读取固定长度的数据.
                .result(buffer); //4. 设置当前解析的结果

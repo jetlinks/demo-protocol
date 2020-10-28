@@ -50,18 +50,18 @@ public class FireAlarm implements TcpPayload, TcpDeviceMessage {
     public byte[] toBytes() {
         //设备id+经度+维度+点位
         byte[] data = new byte[8 + 4 + 4 + 4];
-        BytesUtils.toHighBytes(data, deviceId, 0, 8);
-        BytesUtils.toHighBytes(data, Float.floatToIntBits(lnt), 8, 4);
-        BytesUtils.toHighBytes(data, Float.floatToIntBits(lat), 12, 4);
-        BytesUtils.toHighBytes(data, point, 16, 4);
+        BytesUtils.longToBe(data, deviceId, 0);
+        BytesUtils.intToBe(data, Float.floatToIntBits(lnt), 8);
+        BytesUtils.intToBe(data, Float.floatToIntBits(lat), 12);
+        BytesUtils.intToBe(data, point, 16);
         return data;
     }
 
     @Override
     public void fromBytes(byte[] bytes, int offset) {
-        setDeviceId(BytesUtils.highBytesToLong(bytes, offset, 8));
-        setLnt(BytesUtils.highBytesToFloat(bytes, offset + 8, 4));
-        setLat(BytesUtils.highBytesToFloat(bytes, offset + 12, 4));
-        setPoint(BytesUtils.highBytesToInt(bytes, offset + 16, 4));
+        setDeviceId(BytesUtils.beToLong(bytes, offset, 8));
+        setLnt(BytesUtils.beToFloat(bytes, offset + 8, 4));
+        setLat(BytesUtils.beToFloat(bytes, offset + 12, 4));
+        setPoint(BytesUtils.beToInt(bytes, offset + 16, 4));
     }
 }

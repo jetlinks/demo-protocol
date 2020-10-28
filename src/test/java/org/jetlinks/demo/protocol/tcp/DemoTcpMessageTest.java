@@ -9,7 +9,7 @@ class DemoTcpMessageTest {
 
     @Test
     void test() {
-        DemoTcpMessage message = DemoTcpMessage.of(MessageType.AUTH_REQ, AuthRequest.of(12345, "admin"));
+        DemoTcpMessage message = DemoTcpMessage.of(MessageType.AUTH_REQ, AuthRequest.of(1000, "admin"));
 
         byte[] data = message.toBytes();
         System.out.println(Hex.encodeHexString(data));

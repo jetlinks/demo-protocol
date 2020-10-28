@@ -34,6 +34,7 @@ public class DemoTcpMessageCodec implements DeviceMessageCodec {
 
     @Override
     public Mono<DeviceMessage> decode(MessageDecodeContext context) {
+        log.debug("收到消息：");
         return Mono.defer(() -> {
             FromDeviceMessageContext ctx = ((FromDeviceMessageContext) context);
             ByteBuf byteBuf = context.getMessage().getPayload();
