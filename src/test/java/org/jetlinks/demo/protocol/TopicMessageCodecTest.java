@@ -4,15 +4,16 @@ import com.alibaba.fastjson.JSONObject;
 import org.jetlinks.core.message.ChildDeviceMessage;
 import org.jetlinks.core.message.DeviceMessage;
 import org.jetlinks.core.message.event.EventMessage;
+import org.jetlinks.demo.protocol.mqtt.MqttDeviceMessageCodec;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class DemoTopicMessageCodecTest {
+class TopicMessageCodecTest {
 
     @Test
     void testChildrenMessage() {
-        DemoTopicMessageCodec codec = new DemoDeviceMessageCodec();
+        TopicMessageCodec codec = new MqttDeviceMessageCodec();
 
         DeviceMessage message = codec.doDecode("test", "/children/fire_alarm", new JSONObject());
 

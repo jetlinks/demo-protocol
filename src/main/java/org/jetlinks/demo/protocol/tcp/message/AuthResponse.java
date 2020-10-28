@@ -27,14 +27,14 @@ public class AuthResponse implements TcpPayload {
     @Override
     public byte[] toBytes() {
         byte[] bytes = new byte[9];
-        BytesUtils.longToBe(bytes, deviceId,0);
+        BytesUtils.numberToLe(bytes, deviceId, 0, 8);
         bytes[8] = status.getStatus();
         return bytes;
     }
 
     @Override
     public void fromBytes(byte[] bytes, int offset) {
-        setDeviceId(BytesUtils.beToLong(bytes, offset, 8));
+        setDeviceId(BytesUtils.leToLong(bytes, offset, 8));
         setStatus(TcpStatus.of(bytes[offset + 8]).orElse(TcpStatus.UNKNOWN));
     }
 

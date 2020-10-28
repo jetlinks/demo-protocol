@@ -32,6 +32,8 @@ public class FireAlarm implements TcpPayload, TcpDeviceMessage {
     //点位
     private int point;
 
+    private String bName;
+
     @Override
     public DeviceMessage toDeviceMessage() {
         EventMessage message = new EventMessage();
@@ -41,6 +43,7 @@ public class FireAlarm implements TcpPayload, TcpDeviceMessage {
         map.put("lnt", lnt);
         map.put("lat", lat);
         map.put("point", point);
+        map.put("b_name", bName);
         message.setData(map);
         message.setDeviceId(String.valueOf(deviceId));
         return message;
@@ -50,18 +53,18 @@ public class FireAlarm implements TcpPayload, TcpDeviceMessage {
     public byte[] toBytes() {
         //设备id+经度+维度+点位
         byte[] data = new byte[8 + 4 + 4 + 4];
-        BytesUtils.longToBe(data, deviceId, 0);
-        BytesUtils.intToBe(data, Float.floatToIntBits(lnt), 8);
-        BytesUtils.intToBe(data, Float.floatToIntBits(lat), 12);
-        BytesUtils.intToBe(data, point, 16);
+        BytesUtils.numberToLe(data, deviceId, 0, 8);
+        BytesUtils.numberToLe(data, Float.floatToIntBits(lnt), 8, 4);
+        BytesUtils.numberToLe(data, Float.floatToIntBits(lat), 12, 4);
+        BytesUtils.numberToLe(data, point, 16, 4);
         return data;
     }
 
     @Override
     public void fromBytes(byte[] bytes, int offset) {
-        setDeviceId(BytesUtils.beToLong(bytes, offset, 8));
-        setLnt(BytesUtils.beToFloat(bytes, offset + 8, 4));
-        setLat(BytesUtils.beToFloat(bytes, offset + 12, 4));
-        setPoint(BytesUtils.beToInt(bytes, offset + 16, 4));
+        setDeviceId(BytesUtils.leToLong(bytes, offset, 8));
+        setLnt(BytesUtils.leToFloat(bytes, offset + 8, 4));
+        setLat(BytesUtils.leToFloat(bytes, offset + 12, 4));
+        setPoint(BytesUtils.leToInt(bytes, offset + 16, 4));
     }
 }

@@ -8,6 +8,7 @@ import org.hswebframework.web.id.IDGenerator;
 import org.jetlinks.core.message.*;
 import org.jetlinks.core.message.codec.SimpleMqttMessage;
 import org.jetlinks.core.message.event.EventMessage;
+import org.jetlinks.core.message.firmware.*;
 import org.jetlinks.core.message.function.FunctionInvokeMessage;
 import org.jetlinks.core.message.function.FunctionInvokeMessageReply;
 import org.jetlinks.core.message.property.*;
@@ -16,7 +17,7 @@ import java.util.HashMap;
 
 
 @Slf4j
-public class DemoTopicMessageCodec {
+public class TopicMessageCodec {
 
     protected DeviceMessage doDecode(String deviceId, String topic, JSONObject payload) {
         DeviceMessage message = null;
@@ -28,7 +29,7 @@ public class DemoTopicMessageCodec {
             message = handleRegister(payload);
         } else if (topic.startsWith("/unregister")) {
             message = handleUnRegister(payload);
-        }  else if (topic.startsWith("/dev_msg")) {
+        } else if (topic.startsWith("/dev_msg")) {
             message = handleDeviceMessage(topic, payload);
         } else if (topic.startsWith("/device_online_status")) {
             message = handleDeviceOnlineStatus(topic, payload);
@@ -40,6 +41,8 @@ public class DemoTopicMessageCodec {
             message = handleWritePropertyReply(payload);
         } else if (topic.startsWith("/invoke-function")) {
             message = handleFunctionInvokeReply(payload);
+        } else if (topic.startsWith("/open-door")) {
+            message = handleOpenTheDoor(topic, payload);
         } else if (topic.startsWith("/children")) {
             ChildDeviceMessage childDeviceMessage = new ChildDeviceMessage();
             childDeviceMessage.setDeviceId(deviceId);
@@ -47,6 +50,16 @@ public class DemoTopicMessageCodec {
             childDeviceMessage.setChildDeviceMessage(children);
             childDeviceMessage.setChildDeviceId(children.getDeviceId());
             message = childDeviceMessage;
+        }
+        // 固件相关1.0.3版本后增加,注意: 专业版中才有固件相关业务功能
+        else if (topic.startsWith("/firmware/report")) {//上报固件信息
+            message = payload.toJavaObject(ReportFirmwareMessage.class);
+        } else if (topic.startsWith("/firmware/progress")) { //上报升级进度
+            message = payload.toJavaObject(UpgradeFirmwareProgressMessage.class);
+        } else if (topic.startsWith("/firmware/pull")) { //拉取固件信息
+            message = payload.toJavaObject(RequestFirmwareMessage.class);
+        } else if (topic.startsWith("/tags")) { //更新tags
+            message = payload.toJavaObject(UpdateTagMessage.class);
         }
 
         log.info("handle demo message:{}:{}", topic, payload);
@@ -86,19 +99,20 @@ public class DemoTopicMessageCodec {
             String topic = "/children" + msg.getTopic();
             return new TopicMessage(topic, msg.getMessage());
         }
+
+        //平台推送固件更新,设备无需回复此消息.
+        else if (
+            message instanceof UpgradeFirmwareMessage ||
+                message instanceof RequestFirmwareMessageReply
+        ) {
+            String topic = "/firmware/push";
+            return new TopicMessage(topic, JSON.toJSON(message));
+        }
         return null;
     }
 
     private FunctionInvokeMessageReply handleFunctionInvokeReply(JSONObject json) {
-        FunctionInvokeMessageReply reply = new FunctionInvokeMessageReply();
-        reply.setFunctionId(json.getString("functionId"));
-        reply.setMessageId(json.getString("messageId"));
-        reply.setDeviceId(json.getString("deviceId"));
-        reply.setOutput(json.get("output"));
-        reply.setCode(json.getString("code"));
-        reply.setTimestamp(json.getLong("timestamp"));
-        reply.setSuccess(json.getBoolean("success"));
-        return reply;
+        return json.toJavaObject(FunctionInvokeMessageReply.class);
     }
 
     private DeviceRegisterMessage handleRegister(JSONObject json) {
@@ -106,6 +120,7 @@ public class DemoTopicMessageCodec {
         reply.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
         reply.setDeviceId(json.getString("deviceId"));
         reply.setTimestamp(System.currentTimeMillis());
+        reply.setHeaders(json.getJSONObject("headers"));
         return reply;
     }
 
@@ -118,32 +133,15 @@ public class DemoTopicMessageCodec {
     }
 
     private ReportPropertyMessage handleReportProperty(JSONObject json) {
-        ReportPropertyMessage reply = new ReportPropertyMessage();
-        reply.setProperties(json.getJSONObject("properties"));
-        reply.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
-        reply.setDeviceId(json.getString("deviceId"));
-        reply.setTimestamp(json.getLong("timestamp"));
-        return reply;
+        return json.toJavaObject(ReportPropertyMessage.class);
     }
 
     private ReadPropertyMessageReply handleReadPropertyReply(JSONObject json) {
-        ReadPropertyMessageReply reply = new ReadPropertyMessageReply();
-        reply.setProperties(json.getJSONObject("properties"));
-        reply.setMessageId(json.getString("messageId"));
-        reply.setTimestamp(json.getLong("timestamp"));
-        reply.setDeviceId(json.getString("deviceId"));
-        reply.setSuccess(json.getBoolean("success"));
-        return reply;
+        return json.toJavaObject(ReadPropertyMessageReply.class);
     }
 
     private WritePropertyMessageReply handleWritePropertyReply(JSONObject json) {
-        WritePropertyMessageReply reply = new WritePropertyMessageReply();
-        reply.setProperties(json.getJSONObject("properties"));
-        reply.setMessageId(json.getString("messageId"));
-        reply.setTimestamp(json.getLong("timestamp"));
-        reply.setDeviceId(json.getString("deviceId"));
-        reply.setSuccess(json.getBoolean("success"));
-        return reply;
+        return json.toJavaObject(WritePropertyMessageReply.class);
     }
 
     private EventMessage handleFireAlarm(String topic, JSONObject json) {
@@ -151,6 +149,17 @@ public class DemoTopicMessageCodec {
 
         eventMessage.setDeviceId(json.getString("deviceId"));
         eventMessage.setEvent("fire_alarm");
+        eventMessage.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
+
+        eventMessage.setData(new HashMap<>(json));
+        return eventMessage;
+    }
+
+    private EventMessage handleOpenTheDoor(String topic, JSONObject json) {
+        EventMessage eventMessage = new EventMessage();
+
+        eventMessage.setDeviceId(json.getString("deviceId"));
+        eventMessage.setEvent("open-door");
         eventMessage.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
 
         eventMessage.setData(new HashMap<>(json));

@@ -41,7 +41,7 @@ public class DemoTcpMessage {
         byte[] body = type.toBytes(data);
         int bodyLength = body.length;
 
-        BytesUtils.intToBe(header, bodyLength, 1);
+        BytesUtils.intToLe(header, bodyLength, 1);
 
         if (bodyLength == 0) {
             return header;
