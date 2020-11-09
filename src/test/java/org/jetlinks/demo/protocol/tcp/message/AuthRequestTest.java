@@ -11,7 +11,7 @@ class AuthRequestTest {
 
     @Test
     void test() {
-        AuthRequest message = AuthRequest.of(IDGenerator.SNOW_FLAKE.generate(), "password");
+        AuthRequest message = AuthRequest.of(1000L, "admin");
 
         byte[] payload = message.toBytes();
         System.out.println(Hex.encodeHexString(payload));

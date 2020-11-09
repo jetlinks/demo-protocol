@@ -58,6 +58,8 @@ public class TopicMessageCodec {
             message = payload.toJavaObject(UpgradeFirmwareProgressMessage.class);
         } else if (topic.startsWith("/firmware/pull")) { //拉取固件信息
             message = payload.toJavaObject(RequestFirmwareMessage.class);
+        } else if (topic.startsWith("/tags")) { //更新tags
+            message = payload.toJavaObject(UpdateTagMessage.class);
         }
 
         log.info("handle demo message:{}:{}", topic, payload);
@@ -110,14 +112,6 @@ public class TopicMessageCodec {
     }
 
     private FunctionInvokeMessageReply handleFunctionInvokeReply(JSONObject json) {
-//        FunctionInvokeMessageReply reply = new FunctionInvokeMessageReply();
-//        reply.setFunctionId(json.getString("functionId"));
-//        reply.setMessageId(json.getString("messageId"));
-//        reply.setDeviceId(json.getString("deviceId"));
-//        reply.setOutput(json.get("output"));
-//        reply.setCode(json.getString("code"));
-//        reply.setTimestamp( (Long) json.getOrDefault("timestamp", System.currentTimeMillis()));
-//        reply.setSuccess(json.getBoolean("success"));
         return json.toJavaObject(FunctionInvokeMessageReply.class);
     }
 
@@ -126,6 +120,7 @@ public class TopicMessageCodec {
         reply.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
         reply.setDeviceId(json.getString("deviceId"));
         reply.setTimestamp(System.currentTimeMillis());
+        reply.setHeaders(json.getJSONObject("headers"));
         return reply;
     }
 
@@ -138,31 +133,14 @@ public class TopicMessageCodec {
     }
 
     private ReportPropertyMessage handleReportProperty(JSONObject json) {
-//        ReportPropertyMessage reply = new ReportPropertyMessage();
-//        reply.setProperties(json.getJSONObject("properties"));
-//        reply.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
-//        reply.setDeviceId(json.getString("deviceId"));
-//        reply.setTimestamp((Long) json.getOrDefault("timestamp", System.currentTimeMillis()));
         return json.toJavaObject(ReportPropertyMessage.class);
     }
 
     private ReadPropertyMessageReply handleReadPropertyReply(JSONObject json) {
-//        ReadPropertyMessageReply reply = new ReadPropertyMessageReply();
-//        reply.setProperties(json.getJSONObject("properties"));
-//        reply.setMessageId(json.getString("messageId"));
-//        reply.setTimestamp((Long) json.getOrDefault("timestamp", System.currentTimeMillis()));
-//        reply.setDeviceId(json.getString("deviceId"));
-//        reply.setSuccess(json.getBoolean("success"));
         return json.toJavaObject(ReadPropertyMessageReply.class);
     }
 
     private WritePropertyMessageReply handleWritePropertyReply(JSONObject json) {
-//        WritePropertyMessageReply reply = new WritePropertyMessageReply();
-//        reply.setProperties(json.getJSONObject("properties"));
-//        reply.setMessageId(json.getString("messageId"));
-//        reply.setTimestamp((Long) json.getOrDefault("timestamp", System.currentTimeMillis()));
-//        reply.setDeviceId(json.getString("deviceId"));
-//        reply.setSuccess(json.getBoolean("success"));
         return json.toJavaObject(WritePropertyMessageReply.class);
     }
 

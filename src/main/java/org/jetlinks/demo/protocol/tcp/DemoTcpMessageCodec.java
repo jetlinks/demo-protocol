@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
 import org.jetlinks.core.Value;
@@ -34,7 +35,9 @@ public class DemoTcpMessageCodec implements DeviceMessageCodec {
     }
 
     @Override
+    @SneakyThrows
     public Mono<DeviceMessage> decode(MessageDecodeContext context) {
+        log.debug("收到消息：");
         return Mono.defer(() -> {
             FromDeviceMessageContext ctx = ((FromDeviceMessageContext) context);
             ByteBuf byteBuf = context.getMessage().getPayload();
@@ -50,6 +53,7 @@ public class DemoTcpMessageCodec implements DeviceMessageCodec {
                 }
             } catch (Exception e) {
                 log.warn("decode tcp message error:[{}]", Hex.encodeHexString(payload), e);
+
                 return Mono.error(e);
             }
             DeviceSession session = ctx.getSession();

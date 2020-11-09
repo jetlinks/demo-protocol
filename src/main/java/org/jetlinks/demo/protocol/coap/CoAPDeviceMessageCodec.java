@@ -30,7 +30,7 @@ public class CoAPDeviceMessageCodec extends TopicMessageCodec implements DeviceM
                 topic = "/".concat(topic);
             }
             //转为json
-            JSONObject payload = JSON.parseObject(message.getPayload().toString(StandardCharsets.UTF_8));
+            JSONObject payload = message.payloadAsJson();
 
             //解码消息
             return Mono
