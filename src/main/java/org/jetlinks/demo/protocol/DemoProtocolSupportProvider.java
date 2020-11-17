@@ -5,6 +5,7 @@ import org.jetlinks.core.Value;
 import org.jetlinks.core.defaults.Authenticator;
 import org.jetlinks.core.defaults.CompositeProtocolSupport;
 import org.jetlinks.core.device.*;
+import org.jetlinks.core.device.manager.DeviceBindManager;
 import org.jetlinks.core.message.codec.DefaultTransport;
 import org.jetlinks.core.metadata.DefaultConfigMetadata;
 import org.jetlinks.core.metadata.types.IntType;
@@ -71,6 +72,8 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
                 support.addMessageCodecSupport(DefaultTransport.TCP_TLS, () -> Mono.just(codec));
 
             });
+
+
         support.addConfigMetadata(DefaultTransport.TCP, tcpConfig);
         support.addConfigMetadata(DefaultTransport.TCP_TLS, tcpConfig);
 
@@ -92,9 +95,13 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
         }
 
         {
-            //HTTP
-            HttpDeviceMessageCodec codec = new HttpDeviceMessageCodec();
-            support.addMessageCodecSupport(DefaultTransport.HTTP, () -> Mono.just(codec));
+            //DeviceBindManager 支持绑定第三方平台信息
+            context.getService(DeviceBindManager.class)
+                   .ifPresent(bind->{
+                       //HTTP
+                       HttpDeviceMessageCodec codec = new HttpDeviceMessageCodec(bind);
+                       support.addMessageCodecSupport(DefaultTransport.HTTP, () -> Mono.just(codec));
+                   });
         }
 
         {

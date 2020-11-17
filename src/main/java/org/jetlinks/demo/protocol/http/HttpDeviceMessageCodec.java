@@ -3,6 +3,7 @@ package org.jetlinks.demo.protocol.http;
 import com.alibaba.fastjson.JSONObject;
 import io.netty.buffer.Unpooled;
 import lombok.AllArgsConstructor;
+import org.jetlinks.core.device.manager.DeviceBindManager;
 import org.jetlinks.core.message.Message;
 import org.jetlinks.core.message.codec.*;
 import org.jetlinks.core.message.codec.http.HttpExchangeMessage;
@@ -15,6 +16,8 @@ import reactor.core.publisher.Mono;
 public class HttpDeviceMessageCodec extends TopicMessageCodec implements DeviceMessageCodec {
 
     //WebClient webClient;
+
+    private DeviceBindManager bindManager;
 
     public Transport getSupportTransport() {
         return DefaultTransport.HTTP;
