@@ -39,8 +39,6 @@ import java.util.Arrays;
 @Slf4j
 public class DemoUdpMessageCodec implements DeviceMessageCodec {
 
-    private DeviceRegistry registry;
-
     @Override
     public Transport getSupportTransport() {
         return DefaultTransport.UDP;
@@ -56,7 +54,7 @@ public class DemoUdpMessageCodec implements DeviceMessageCodec {
             return Mono
                     .justOrEmpty(org.jetlinks.core.message.MessageType.<DeviceMessage>convertMessage(payload))
                     .flatMapMany(msg->{
-                       return registry
+                       return context
                                 .getDevice(msg.getDeviceId())
                                 .flatMapMany(operator -> operator.getConfig("udp_auth_key")
                                         .map(Value::asString)
@@ -81,7 +79,7 @@ public class DemoUdpMessageCodec implements DeviceMessageCodec {
 
     @Override
     public Publisher<? extends EncodedMessage> encode(MessageEncodeContext context) {
-        return null;
+        return Mono.empty();
     }
 
     @Setter

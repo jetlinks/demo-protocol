@@ -8,6 +8,7 @@ import org.jetlinks.core.device.*;
 import org.jetlinks.core.device.manager.DeviceBindManager;
 import org.jetlinks.core.message.codec.DefaultTransport;
 import org.jetlinks.core.metadata.DefaultConfigMetadata;
+import org.jetlinks.core.metadata.DeviceConfigScope;
 import org.jetlinks.core.metadata.types.IntType;
 import org.jetlinks.core.metadata.types.PasswordType;
 import org.jetlinks.core.metadata.types.StringType;
@@ -54,8 +55,8 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
     private static final DefaultConfigMetadata tcpClientConfig = new DefaultConfigMetadata(
         "远程服务配置"
         , "")
-        .add("host", "host", "host", StringType.GLOBAL)
-        .add("port", "port", "host", IntType.GLOBAL);
+        .add("host", "host", "host", StringType.GLOBAL, DeviceConfigScope.product)//只需要产品配置
+        .add("port", "port", "host", IntType.GLOBAL, DeviceConfigScope.product);//只需要产品配置
 
     @Override
     public Mono<? extends ProtocolSupport> create(ServiceContext context) {
@@ -63,30 +64,28 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
         support.setId("demo-v1");
         support.setName("演示协议v1");
         support.setDescription("演示协议");
+        //固定为JetLinksDeviceMetadataCodec
         support.setMetadataCodec(new JetLinksDeviceMetadataCodec());
-        context.getService(DeviceRegistry.class)
-            .ifPresent(deviceRegistry -> {
-                //TCP消息编解码器
-                DemoTcpMessageCodec codec = new DemoTcpMessageCodec(deviceRegistry);
-                support.addMessageCodecSupport(DefaultTransport.TCP, () -> Mono.just(codec));
-                support.addMessageCodecSupport(DefaultTransport.TCP_TLS, () -> Mono.just(codec));
 
-            });
+        //TCP 演示协议
+        {
+            DemoTcpMessageCodec codec = new DemoTcpMessageCodec();
+            support.addMessageCodecSupport(DefaultTransport.TCP, () -> Mono.just(codec));
+            support.addMessageCodecSupport(DefaultTransport.TCP_TLS, () -> Mono.just(codec));
+            support.addConfigMetadata(DefaultTransport.TCP, tcpConfig);
+            support.addConfigMetadata(DefaultTransport.TCP_TLS, tcpConfig);
 
+        }
 
-        support.addConfigMetadata(DefaultTransport.TCP, tcpConfig);
-        support.addConfigMetadata(DefaultTransport.TCP_TLS, tcpConfig);
+        {
+            //UDP消息编解码器
+            DemoUdpMessageCodec codec = new DemoUdpMessageCodec();
+            support.addMessageCodecSupport(DefaultTransport.UDP, () -> Mono.just(codec));
+            support.addMessageCodecSupport(DefaultTransport.UDP_DTLS, () -> Mono.just(codec));
 
-        context.getService(DeviceRegistry.class)
-            .ifPresent(deviceRegistry -> {
-                //UDP消息编解码器
-                DemoUdpMessageCodec codec = new DemoUdpMessageCodec(deviceRegistry);
-                support.addMessageCodecSupport(DefaultTransport.UDP, () -> Mono.just(codec));
-                support.addMessageCodecSupport(DefaultTransport.UDP_DTLS, () -> Mono.just(codec));
-
-            });
-        support.addConfigMetadata(DefaultTransport.UDP, udpConfig);
-        support.addConfigMetadata(DefaultTransport.UDP_DTLS, udpConfig);
+            support.addConfigMetadata(DefaultTransport.UDP, udpConfig);
+            support.addConfigMetadata(DefaultTransport.UDP_DTLS, udpConfig);
+        }
 
         {
             //MQTT消息编解码器
