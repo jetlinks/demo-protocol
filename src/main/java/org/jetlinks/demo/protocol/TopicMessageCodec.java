@@ -133,7 +133,9 @@ public class TopicMessageCodec {
     }
 
     private ReportPropertyMessage handleReportProperty(JSONObject json) {
-        return json.toJavaObject(ReportPropertyMessage.class);
+        ReportPropertyMessage msg = ReportPropertyMessage.create();
+        msg.fromJson(json);
+        return msg;
     }
 
     private ReadPropertyMessageReply handleReadPropertyReply(JSONObject json) {
