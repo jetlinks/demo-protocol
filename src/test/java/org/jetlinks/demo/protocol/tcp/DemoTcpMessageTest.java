@@ -35,7 +35,7 @@ class DemoTcpMessageTest {
 
     @Test
     void encodeTest() {
-        DemoTcpMessageCodec demoTcpMessageCodec = new DemoTcpMessageCodec(null);
+        DemoTcpMessageCodec demoTcpMessageCodec = new DemoTcpMessageCodec();
         ReadPropertyMessage readPropertyMessage = new ReadPropertyMessage();
         readPropertyMessage.setCode("10001");
         readPropertyMessage.setDeviceId("1000");
