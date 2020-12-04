@@ -95,12 +95,12 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
 
         {
             //DeviceBindManager 支持绑定第三方平台信息
-            context.getService(DeviceBindManager.class)
-                   .ifPresent(bind->{
-                       //HTTP
-                       HttpDeviceMessageCodec codec = new HttpDeviceMessageCodec(bind);
-                       support.addMessageCodecSupport(DefaultTransport.HTTP, () -> Mono.just(codec));
-                   });
+//            context.getService(DeviceBindManager.class)
+//                   .ifPresent(bind->{
+            //HTTP
+            HttpDeviceMessageCodec codec = new HttpDeviceMessageCodec();
+            support.addMessageCodecSupport(DefaultTransport.HTTP, () -> Mono.just(codec));
+//                   });
         }
 
         {
@@ -109,7 +109,7 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
                 Mono.justOrEmpty(context.getService(DeviceRegistry.class)),
                 Mono.justOrEmpty(context.getService(DeviceSessionManager.class)),
                 HttpClientDeviceMessageCodec::new
-                )
+            )
                 .subscribe(codec -> {
 
                     //注册到协议
@@ -140,16 +140,18 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
             public Mono<AuthenticationResponse> authenticate(@Nonnull AuthenticationRequest request, @Nonnull DeviceOperator device) {
                 MqttAuthenticationRequest mqttRequest = ((MqttAuthenticationRequest) request);
                 return device.getConfigs("username", "password")
-                    .flatMap(values -> {
-                        String username = values.getValue("username").map(Value::asString).orElse(null);
-                        String password = values.getValue("password").map(Value::asString).orElse(null);
-                        if (mqttRequest.getUsername().equals(username) && mqttRequest.getPassword().equals(password)) {
-                            return Mono.just(AuthenticationResponse.success());
-                        } else {
-                            return Mono.just(AuthenticationResponse.error(400, "密码错误"));
-                        }
+                             .flatMap(values -> {
+                                 String username = values.getValue("username").map(Value::asString).orElse(null);
+                                 String password = values.getValue("password").map(Value::asString).orElse(null);
+                                 if (mqttRequest.getUsername().equals(username) && mqttRequest
+                                     .getPassword()
+                                     .equals(password)) {
+                                     return Mono.just(AuthenticationResponse.success());
+                                 } else {
+                                     return Mono.just(AuthenticationResponse.error(400, "密码错误"));
+                                 }
 
-                    });
+                             });
             }
 
             @Override
