@@ -17,7 +17,7 @@ public class HttpDeviceMessageCodec extends TopicMessageCodec implements DeviceM
 
     //WebClient webClient;
 
-    private DeviceBindManager bindManager;
+//    private DeviceBindManager bindManager;
 
     public Transport getSupportTransport() {
         return DefaultTransport.HTTP;
