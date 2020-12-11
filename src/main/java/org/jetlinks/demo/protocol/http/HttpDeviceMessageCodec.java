@@ -5,6 +5,7 @@ import io.netty.buffer.Unpooled;
 import lombok.AllArgsConstructor;
 import org.jetlinks.core.device.manager.DeviceBindManager;
 import org.jetlinks.core.message.Message;
+import org.jetlinks.core.message.RepayableDeviceMessage;
 import org.jetlinks.core.message.codec.*;
 import org.jetlinks.core.message.codec.http.HttpExchangeMessage;
 import org.jetlinks.core.message.codec.http.SimpleHttpResponseMessage;
@@ -57,6 +58,9 @@ public class HttpDeviceMessageCodec extends TopicMessageCodec implements DeviceM
 
     public Mono<EncodedMessage> encode(MessageEncodeContext context) {
 
+        return context
+            .reply(((RepayableDeviceMessage<?>) context.getMessage()).newReply().success())
+            .then(Mono.empty());
         // 调用第三方接口
 //       return webClient.post()
 //            .uri("http://local-host.cn/")
@@ -71,7 +75,7 @@ public class HttpDeviceMessageCodec extends TopicMessageCodec implements DeviceM
 //            .as(context::reply)
 //            .then(Mono.empty());
 
-        return Mono.empty();
+        //return Mono.empty();
 
     }
 
