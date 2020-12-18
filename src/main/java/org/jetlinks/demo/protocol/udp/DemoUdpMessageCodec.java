@@ -53,25 +53,23 @@ public class DemoUdpMessageCodec implements DeviceMessageCodec {
             JSONObject payload = JSON.parseObject(encodedMessage.getPayload().toString(StandardCharsets.UTF_8));
             return Mono
                     .justOrEmpty(org.jetlinks.core.message.MessageType.<DeviceMessage>convertMessage(payload))
-                    .flatMapMany(msg->{
-                       return context
-                                .getDevice(msg.getDeviceId())
-                                .flatMapMany(operator -> operator.getConfig("udp_auth_key")
-                                        .map(Value::asString)
-                                        .filter(key -> key.equals(payload.getString("key")))
-                                        .flatMapMany(ignore -> {
-                                            //认证通过
-                                            DeviceOnlineMessage onlineMessage = new DeviceOnlineMessage();
-                                            onlineMessage.setDeviceId(operator.getDeviceId());
-                                            onlineMessage.setTimestamp(System.currentTimeMillis());
-                                            return session
-                                                    .send(EncodedMessage.simple(Unpooled.wrappedBuffer(Response.of(MessageType.AUTH_RES, "SUCCESS").toString().getBytes())))
-                                                    .thenMany(Flux.just(msg,onlineMessage));
-                                        }));
-
-                    }) .switchIfEmpty(Mono.defer(() -> session
-                            .send(EncodedMessage.simple(Unpooled.wrappedBuffer(Response.of(MessageType.AUTH_RES, "ILLEGAL_ARGUMENTS").toString().getBytes())))
-                            .then(Mono.empty())));
+//                    .flatMapMany(msg->{
+//                       return context
+//                                .getDevice(msg.getDeviceId())
+//                                .flatMapMany(operator -> operator.getConfig("udp_auth_key")
+//                                        .map(Value::asString)
+//                                        .filter(key -> key.equals(payload.getString("key")))
+//                                        .flatMapMany(ignore -> {
+//                                            //认证通过
+//                                            return session
+//                                                    .send(EncodedMessage.simple(Unpooled.wrappedBuffer("ok".getBytes())))
+//                                                    .thenMany(Flux.just(msg));
+//                                        }));
+//
+//                    }) .switchIfEmpty(Mono.defer(() -> session
+//                            .send(EncodedMessage.simple(Unpooled.wrappedBuffer("ILLEGAL_ARGUMENTS".getBytes())))
+//                            .then(Mono.empty())))
+                ;
 
 
         });
@@ -79,7 +77,8 @@ public class DemoUdpMessageCodec implements DeviceMessageCodec {
 
     @Override
     public Publisher<? extends EncodedMessage> encode(MessageEncodeContext context) {
-        return Mono.empty();
+
+        return Mono.just(EncodedMessage.simple(Unpooled.wrappedBuffer(context.getMessage().toString().getBytes())));
     }
 
     @Setter
