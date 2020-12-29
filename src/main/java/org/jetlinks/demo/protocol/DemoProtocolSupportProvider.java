@@ -103,20 +103,20 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
 //                   });
         }
 
-        {
-            //HTTP Client
-            Mono.zip(
-                Mono.justOrEmpty(context.getService(DeviceRegistry.class)),
-                Mono.justOrEmpty(context.getService(DeviceSessionManager.class)),
-                HttpClientDeviceMessageCodec::new
-            )
-                .subscribe(codec -> {
-
-                    //注册到协议
-                    //support.addMessageCodecSupport(DefaultTransport.HTTP, () -> Mono.just(codec));
-
-                });
-        }
+//        {
+//            //HTTP Client
+//            Mono.zip(
+//                Mono.justOrEmpty(context.getService(DeviceRegistry.class)),
+//                Mono.justOrEmpty(context.getService(DeviceSessionManager.class)),
+//                HttpClientDeviceMessageCodec::new
+//            )
+//                .subscribe(codec -> {
+//
+//                    //注册到协议
+//                    //support.addMessageCodecSupport(DefaultTransport.HTTP, () -> Mono.just(codec));
+//
+//                });
+//        }
 
 
         {
