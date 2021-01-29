@@ -1,14 +1,11 @@
 package org.jetlinks.demo.protocol.tcp;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
 import org.jetlinks.core.Value;
-import org.jetlinks.core.device.DeviceRegistry;
 import org.jetlinks.core.message.DeviceMessage;
 import org.jetlinks.core.message.DeviceOnlineMessage;
 import org.jetlinks.core.message.Message;
@@ -39,8 +36,7 @@ public class DemoTcpMessageCodec implements DeviceMessageCodec {
         log.debug("收到消息：");
         return Mono.defer(() -> {
             FromDeviceMessageContext ctx = ((FromDeviceMessageContext) context);
-            ByteBuf byteBuf = context.getMessage().getPayload();
-            byte[] payload = ByteBufUtil.getBytes(byteBuf, 0, byteBuf.readableBytes(), false);
+            byte[] payload =  context.getMessage().payloadAsBytes();
             if (log.isDebugEnabled()) {
                 log.debug("handle tcp message:\n{}", Hex.encodeHexString(payload));
             }
