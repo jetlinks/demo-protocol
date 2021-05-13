@@ -66,7 +66,7 @@ public class TcpClientDeviceSession implements DeviceSession {
     public Mono<Boolean> send(EncodedMessage encodedMessage) {
         return Mono.create(sink -> netSocket.write(Buffer.buffer(encodedMessage.getPayload()), async -> {
             if (async.succeeded()) {
-                sink.success();
+                sink.success(true);
             } else {
                 sink.error(async.cause());
             }
