@@ -62,7 +62,7 @@ class DemoTcpMessageTest {
                         .deviceId(1000)
                         .bName("a")
                         .build());
-        byte[] data = new byte[500*1024];
+        byte[] data = demoTcpMessage.toBytes();
         System.out.println(demoTcpMessage);
         System.out.println(Hex.encodeHexString(data));
         //061400000000000000000003e842f43e7742cc77cf1bd9071c
