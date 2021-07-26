@@ -20,6 +20,9 @@ import java.util.HashMap;
 public class TopicMessageCodec {
 
     protected DeviceMessage doDecode(String deviceId, String topic, JSONObject payload) {
+        if (!topic.startsWith("/")) {
+            topic = "/" + topic;
+        }
         DeviceMessage message = null;
         if (topic.startsWith("/fire_alarm")) {
             message = handleFireAlarm(topic, payload);
