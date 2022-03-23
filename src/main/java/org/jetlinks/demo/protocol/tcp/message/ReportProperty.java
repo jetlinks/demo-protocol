@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.jetlinks.core.message.DeviceMessage;
 import org.jetlinks.core.message.property.ReportPropertyMessage;
+import org.jetlinks.demo.protocol.tcp.TcpDeviceMessage;
 import org.jetlinks.demo.protocol.tcp.TcpPayload;
 
 import java.nio.charset.StandardCharsets;
@@ -15,7 +17,7 @@ import java.util.Arrays;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor(staticName = "of")
-public class ReportProperty implements TcpPayload {
+public class ReportProperty implements TcpDeviceMessage, TcpPayload {
     private ReportPropertyMessage reportPropertyMessage;
 
     @Override
@@ -30,5 +32,10 @@ public class ReportProperty implements TcpPayload {
         String s = new String(bytes1, StandardCharsets.UTF_8);
         reportPropertyMessage.fromJson(JSON.parseObject(s));
         this.reportPropertyMessage = reportPropertyMessage;
+    }
+
+    @Override
+    public DeviceMessage toDeviceMessage() {
+        return reportPropertyMessage;
     }
 }
