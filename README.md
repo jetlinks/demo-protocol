@@ -9,4 +9,11 @@
 类名填写: `org.jetlinks.demo.protocol.DemoProtocolSupportProvider`
 
 
+# TCP相关
+
+报文生成和解码在test包下的src/test/java/org/jetlinks/demo/protocol/tcp/DemoTcpMessageTest.java类内
+
+参考该类生成属性上报报文和属性回复报文及事件上报报文
+
+
 

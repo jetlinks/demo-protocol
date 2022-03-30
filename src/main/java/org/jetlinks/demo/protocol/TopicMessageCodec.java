@@ -2,9 +2,11 @@ package org.jetlinks.demo.protocol;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import io.netty.buffer.Unpooled;
 import lombok.extern.slf4j.Slf4j;
 import org.hswebframework.web.id.IDGenerator;
 import org.jetlinks.core.message.*;
+import org.jetlinks.core.message.codec.SimpleMqttMessage;
 import org.jetlinks.core.message.event.EventMessage;
 import org.jetlinks.core.message.firmware.*;
 import org.jetlinks.core.message.function.FunctionInvokeMessage;
@@ -18,6 +20,9 @@ import java.util.HashMap;
 public class TopicMessageCodec {
 
     protected DeviceMessage doDecode(String deviceId, String topic, JSONObject payload) {
+        if (!topic.startsWith("/")) {
+            topic = "/" + topic;
+        }
         DeviceMessage message = null;
         if (topic.startsWith("/fire_alarm")) {
             message = handleFireAlarm(topic, payload);
@@ -34,8 +39,6 @@ public class TopicMessageCodec {
         } else if (topic.startsWith("/read-property")) {
             message = handleReadPropertyReply(payload);
         } else if (topic.startsWith("/report-property")) { //定时上报属性
-            message = handleReportProperty(payload);
-        } else if (topic.startsWith("/report-property-broker")) { //定时上报属性
             message = handleReportProperty(payload);
         } else if (topic.startsWith("/write-property")) {
             message = handleWritePropertyReply(payload);
@@ -60,21 +63,12 @@ public class TopicMessageCodec {
             message = payload.toJavaObject(RequestFirmwareMessage.class);
         } else if (topic.startsWith("/tags")) { //更新tags
             message = payload.toJavaObject(UpdateTagMessage.class);
-        } else if (topic.startsWith("/event")) {
+        }else {
             message = handleEvent(topic, payload);
         }
 
         log.info("handle demo message:{}:{}", topic, payload);
         return message;
-    }
-
-    private DeviceMessage handleEvent(String topic, JSONObject json) {
-        EventMessage eventMessage = new EventMessage();
-        eventMessage.setDeviceId(json.getString("deviceId"));
-        eventMessage.setEvent(json.getString("eventId"));
-        eventMessage.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
-        eventMessage.setData(new HashMap<>(json));
-        return eventMessage;
     }
 
 
@@ -113,8 +107,8 @@ public class TopicMessageCodec {
 
         //平台推送固件更新,设备无需回复此消息.
         else if (
-                message instanceof UpgradeFirmwareMessage ||
-                        message instanceof RequestFirmwareMessageReply
+            message instanceof UpgradeFirmwareMessage ||
+                message instanceof RequestFirmwareMessageReply
         ) {
             String topic = "/firmware/push";
             return new TopicMessage(topic, JSON.toJSON(message));
@@ -145,8 +139,6 @@ public class TopicMessageCodec {
 
     private ReportPropertyMessage handleReportProperty(JSONObject json) {
         ReportPropertyMessage msg = ReportPropertyMessage.create();
-        msg.addHeader(Headers.keepOnline, true); //设置让会话强制在线
-        msg.addHeader(Headers.keepOnlineTimeoutSeconds, 180);//设置超时时间（可选,默认10分钟），如果超过这个时间没有收到任何消息则认为离线。
         msg.fromJson(json);
         return msg;
     }
@@ -169,6 +161,18 @@ public class TopicMessageCodec {
         eventMessage.setData(new HashMap<>(json));
         return eventMessage;
     }
+
+    private DeviceMessage handleEvent(String topic, JSONObject json) {
+        EventMessage eventMessage = new EventMessage();
+
+        eventMessage.setDeviceId(json.getString("deviceId"));
+        eventMessage.setEvent(topic.substring(1));
+        eventMessage.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
+
+        eventMessage.setData(new HashMap<>(json));
+        return eventMessage;
+    }
+
 
     private EventMessage handleOpenTheDoor(String topic, JSONObject json) {
         EventMessage eventMessage = new EventMessage();
