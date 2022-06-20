@@ -63,6 +63,10 @@ public class TopicMessageCodec {
             message = payload.toJavaObject(RequestFirmwareMessage.class);
         } else if (topic.startsWith("/tags")) { //更新tags
             message = payload.toJavaObject(UpdateTagMessage.class);
+        } else if (topic.startsWith("/offline")) {
+            message = payload.toJavaObject(DeviceOfflineMessage.class);
+        }else if (topic.startsWith("/online")) {
+            message = payload.toJavaObject(DeviceOnlineMessage.class);
         }
 
         log.info("handle demo message:{}:{}", topic, payload);
