@@ -67,6 +67,8 @@ public class TopicMessageCodec {
             message = payload.toJavaObject(DeviceOfflineMessage.class);
         }else if (topic.startsWith("/online")) {
             message = payload.toJavaObject(DeviceOnlineMessage.class);
+        }else {
+            message = handleEvent(topic, payload);
         }
 
         log.info("handle demo message:{}:{}", topic, payload);
@@ -163,6 +165,18 @@ public class TopicMessageCodec {
         eventMessage.setData(new HashMap<>(json));
         return eventMessage;
     }
+
+    private DeviceMessage handleEvent(String topic, JSONObject json) {
+        EventMessage eventMessage = new EventMessage();
+
+        eventMessage.setDeviceId(json.getString("deviceId"));
+        eventMessage.setEvent(topic.substring(1));
+        eventMessage.setMessageId(IDGenerator.SNOW_FLAKE_STRING.generate());
+
+        eventMessage.setData(new HashMap<>(json));
+        return eventMessage;
+    }
+
 
     private EventMessage handleOpenTheDoor(String topic, JSONObject json) {
         EventMessage eventMessage = new EventMessage();
