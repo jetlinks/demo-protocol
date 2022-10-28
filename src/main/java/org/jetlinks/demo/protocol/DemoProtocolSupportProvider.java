@@ -5,28 +5,54 @@ import org.jetlinks.core.Value;
 import org.jetlinks.core.defaults.Authenticator;
 import org.jetlinks.core.defaults.CompositeProtocolSupport;
 import org.jetlinks.core.device.*;
-import org.jetlinks.core.device.manager.DeviceBindManager;
+import org.jetlinks.core.message.codec.CodecFeature;
 import org.jetlinks.core.message.codec.DefaultTransport;
 import org.jetlinks.core.metadata.DefaultConfigMetadata;
 import org.jetlinks.core.metadata.DeviceConfigScope;
 import org.jetlinks.core.metadata.types.IntType;
 import org.jetlinks.core.metadata.types.PasswordType;
 import org.jetlinks.core.metadata.types.StringType;
-import org.jetlinks.core.server.session.DeviceSessionManager;
+import org.jetlinks.core.route.HttpRoute;
+import org.jetlinks.core.route.MqttRoute;
 import org.jetlinks.core.spi.ProtocolSupportProvider;
 import org.jetlinks.core.spi.ServiceContext;
 import org.jetlinks.demo.protocol.coap.CoAPDeviceMessageCodec;
-import org.jetlinks.demo.protocol.http.HttpClientDeviceMessageCodec;
 import org.jetlinks.demo.protocol.http.HttpDeviceMessageCodec;
+import org.jetlinks.demo.protocol.mqtt.MqttBrokerRoutes;
 import org.jetlinks.demo.protocol.mqtt.MqttDeviceMessageCodec;
 import org.jetlinks.demo.protocol.tcp.DemoTcpMessageCodec;
 import org.jetlinks.demo.protocol.udp.DemoUdpMessageCodec;
 import org.jetlinks.demo.protocol.websocket.WebsocketDeviceMessageCodec;
 import org.jetlinks.supports.official.JetLinksDeviceMetadataCodec;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Nonnull;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+/**
+ * <p>在1.0演示协议包基础上新增2.0的特性参数.</p>
+ *
+ * <p>1.新增特性使用方法: </p>
+ * <blockquote><pre>
+ *   //支持设备固件升级
+ *   support.addFeature(DeviceFeatures.supportFirmware);
+ *
+ *
+ *   //支持消息协议使用透传
+ *   support.addFeature(CodecFeature.transparentCodec);
+ * </pre></blockquote>
+ *
+ * <p>2.mqtt broker 接入需要配置路由地址</p>
+ *
+ * @see DeviceFeatures
+ * @see CodecFeature
+ * @since 2.0
+ */
 public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
 
 
@@ -36,27 +62,27 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
     }
 
     private static final DefaultConfigMetadata mqttConfig = new DefaultConfigMetadata(
-        "MQTT认证配置"
-        , "")
-        .add("username", "username", "MQTT用户名", StringType.GLOBAL)
-        .add("password", "password", "MQTT密码", PasswordType.GLOBAL);
+            "MQTT认证配置"
+            , "")
+            .add("username", "username", "MQTT用户名", StringType.GLOBAL)
+            .add("password", "password", "MQTT密码", PasswordType.GLOBAL);
 
 
     private static final DefaultConfigMetadata tcpConfig = new DefaultConfigMetadata(
-        "TCP认证配置"
-        , "")
-        .add("tcp_auth_key", "key", "TCP认证KEY", StringType.GLOBAL);
+            "TCP认证配置"
+            , "")
+            .add("tcp_auth_key", "key", "TCP认证KEY", StringType.GLOBAL);
 
     private static final DefaultConfigMetadata udpConfig = new DefaultConfigMetadata(
-        "UDP认证配置"
-        , "")
-        .add("udp_auth_key", "key", "UDP认证KEY", StringType.GLOBAL);
+            "UDP认证配置"
+            , "")
+            .add("udp_auth_key", "key", "UDP认证KEY", StringType.GLOBAL);
 
     private static final DefaultConfigMetadata tcpClientConfig = new DefaultConfigMetadata(
-        "远程服务配置"
-        , "")
-        .add("host", "host", "host", StringType.GLOBAL, DeviceConfigScope.product)//只需要产品配置
-        .add("port", "port", "host", IntType.GLOBAL, DeviceConfigScope.product);//只需要产品配置
+            "远程服务配置"
+            , "")
+            .add("host", "host", "host", StringType.GLOBAL, DeviceConfigScope.product)//只需要产品配置
+            .add("port", "port", "host", IntType.GLOBAL, DeviceConfigScope.product);//只需要产品配置
 
     @Override
     public Mono<? extends ProtocolSupport> create(ServiceContext context) {
@@ -91,6 +117,14 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
             //MQTT消息编解码器
             MqttDeviceMessageCodec codec = new MqttDeviceMessageCodec();
             support.addMessageCodecSupport(DefaultTransport.MQTT, () -> Mono.just(codec));
+
+
+            support.addRoutes(DefaultTransport.MQTT, Arrays
+                .stream(MqttBrokerRoutes.values())
+                .map(MqttBrokerRoutes::getRoute)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList())
+            );
         }
 
         {
@@ -144,8 +178,8 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
                                  String username = values.getValue("username").map(Value::asString).orElse(null);
                                  String password = values.getValue("password").map(Value::asString).orElse(null);
                                  if (mqttRequest.getUsername().equals(username) && mqttRequest
-                                     .getPassword()
-                                     .equals(password)) {
+                                         .getPassword()
+                                         .equals(password)) {
                                      return Mono.just(AuthenticationResponse.success());
                                  } else {
                                      return Mono.just(AuthenticationResponse.error(400, "密码错误"));
@@ -159,17 +193,17 @@ public class DemoProtocolSupportProvider implements ProtocolSupportProvider {
             public Mono<AuthenticationResponse> authenticate(@Nonnull AuthenticationRequest request, @Nonnull DeviceRegistry registry) {
                 MqttAuthenticationRequest mqttRequest = ((MqttAuthenticationRequest) request);
                 return registry
-                    .getDevice(mqttRequest.getUsername()) //用户名作为设备ID
-                    .flatMap(device -> device
-                        .getSelfConfig("password").map(Value::asString) //密码
-                        .flatMap(password -> {
-                            if (password.equals(mqttRequest.getPassword())) {
-                                //认证成功，需要返回设备ID
-                                return Mono.just(AuthenticationResponse.success(mqttRequest.getUsername()));
-                            } else {
-                                return Mono.just(AuthenticationResponse.error(400, "密码错误"));
-                            }
-                        }));
+                        .getDevice(mqttRequest.getUsername()) //用户名作为设备ID
+                        .flatMap(device -> device
+                                .getSelfConfig("password").map(Value::asString) //密码
+                                .flatMap(password -> {
+                                    if (password.equals(mqttRequest.getPassword())) {
+                                        //认证成功，需要返回设备ID
+                                        return Mono.just(AuthenticationResponse.success(mqttRequest.getUsername()));
+                                    } else {
+                                        return Mono.just(AuthenticationResponse.error(400, "密码错误"));
+                                    }
+                                }));
             }
         });
 

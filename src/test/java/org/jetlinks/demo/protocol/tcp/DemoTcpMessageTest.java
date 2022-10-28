@@ -3,7 +3,6 @@ package org.jetlinks.demo.protocol.tcp;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang.RandomStringUtils;
 import org.jetlinks.core.message.codec.EncodedMessage;
 import org.jetlinks.core.message.property.ReadPropertyMessage;
 import org.jetlinks.core.message.property.ReportPropertyMessage;
@@ -21,7 +20,7 @@ class DemoTcpMessageTest {
 
     @Test
     void test() {
-        DemoTcpMessage message = DemoTcpMessage.of(MessageType.AUTH_REQ, AuthRequest.of(2333, "admin"));
+        DemoTcpMessage message = DemoTcpMessage.of(MessageType.AUTH_REQ, AuthRequest.of(1000, "admin"));
 
         byte[] data = message.toBytes();
         System.out.println(Hex.encodeHexString(data));
@@ -58,7 +57,7 @@ class DemoTcpMessageTest {
     void encodeCustomTest() {
         ReportPropertyMessage readPropertyMessage = new ReportPropertyMessage();
         Map<String, Object> map = new HashMap<>();
-        map.put("name", RandomStringUtils.randomAlphanumeric(10));
+//        map.put("name", RandomStringUtils.randomAlphanumeric(10));
         map.put("A1", (int) (Math.random() * 100));
         map.put("temperature", Math.random() * 100);
         readPropertyMessage.setDeviceId("1000");
@@ -111,5 +110,13 @@ class DemoTcpMessageTest {
         //\06\14\00\00\00\00\00\00\00\00\00\03\e8B\f4>wB\ccw\cf\ba\f9#\aa
     }
 
+
+    public static void main(String[] args) {
+        byte[] bytes =  {
+            10, 32, 32, 32,32
+        } ;
+
+        System.out.println(new String(bytes));
+    }
 
 }

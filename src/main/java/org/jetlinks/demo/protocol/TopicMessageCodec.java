@@ -40,6 +40,8 @@ public class TopicMessageCodec {
             message = handleReadPropertyReply(payload);
         } else if (topic.startsWith("/report-property")) { //定时上报属性
             message = handleReportProperty(payload);
+        } else if (topic.startsWith("/properties")) { //定时上报属性
+            message = handleReportProperty(payload);
         } else if (topic.startsWith("/write-property")) {
             message = handleWritePropertyReply(payload);
         } else if (topic.startsWith("/invoke-function")) {
